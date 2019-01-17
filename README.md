@@ -1,1 +1,1 @@
-# Discligo
+# Disclipy: A Discord CLI in Python
