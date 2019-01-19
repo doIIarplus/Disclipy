@@ -1,5 +1,9 @@
 # Disclipy: A Discord CLI in Python
 
+# Requirements
+
+- Python 3.7
+
 # Dev
 
 ### Setup virtual environment
@@ -34,8 +38,4 @@ Push individual files with:
 ./push.sh file1 file2 file3
 ```
 
-
-# Requirements
-
-- Python 3.7
 
