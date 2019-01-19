@@ -4,7 +4,7 @@ attrs==18.2.0
 autopep8==1.4.3
 chardet==3.0.4
 Click==7.0
-discord.py==1.0.0a1634+g7f4c57d
+git+git://github.com/Rapptz/discord.py@7f4c57dd5ad20b7fa10aea485f674a4bc24b9547
 fuzzyfinder==2.1.0
 idna==2.8
 multidict==4.5.2
