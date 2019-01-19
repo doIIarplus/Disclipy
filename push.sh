@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+autopep8 --in-place --max-line-length 90 --aggressive --aggressive -v *.py
+
 if [ $# -gt 0 ]; then
 	git add "$@" 
 else
@@ -24,7 +26,6 @@ echo "Are you sure you want to push these files? [y/n]"
 read yn
 
 if [ "$yn" != "${yn#[Yy]}" ]; then
-	autopep8 --in-place --aggressive --aggressive -v *.py
 	git commit --allow-empty-message -m ''
 	git push origin master
 else
