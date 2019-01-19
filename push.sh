@@ -24,6 +24,7 @@ echo "Are you sure you want to push these files? [y/n]"
 read yn
 
 if [ "$yn" != "${yn#[Yy]}" ]; then
+	autopep8 --in-place --aggressive --aggressive -v *.py
 	git commit --allow-empty-message -m ''
 	git push origin master
 else

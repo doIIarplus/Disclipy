@@ -4,10 +4,10 @@ from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import WordCompleter
 
 AutoCompleter = WordCompleter(['abcde', 'bcdef', 'cdefg', 'defgh'],
-                             ignore_case=True)
+                              ignore_case=True)
 
-while 1:
-    user_input = prompt('Discord>', 
+while True:
+    user_input = prompt('Discord>',
                         history=FileHistory('history.txt'),
                         auto_suggest=AutoSuggestFromHistory(),
                         completer=AutoCOmpleter,

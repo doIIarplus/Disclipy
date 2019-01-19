@@ -1,6 +1,14 @@
+aiohttp==1.0.5
+async-timeout==3.0.1
+autopep8==1.4.3
+chardet==3.0.4
 Click==7.0
+discord.py==0.16.12
 fuzzyfinder==2.1.0
+multidict==4.5.2
 prompt-toolkit==2.0.7
+pycodestyle==2.4.0
 Pygments==2.3.1
 six==1.12.0
 wcwidth==0.1.7
+websockets==3.4
