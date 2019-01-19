@@ -1,5 +1,6 @@
 .DS_Store
 venv/
 *.txt
+!requirements.txt
 __pycache__/
 *.pyc
