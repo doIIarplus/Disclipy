@@ -1,19 +1,22 @@
 import http.client
 import getpass
+import json
 
-conn = http.client.HTTPSConnection("discordapp.com")
-email = input('Enter your email: ')
-password = getpass.getpass('Enter your password: ')
 
-payload = "{\n\t\"captcha_key\":null,\n\t\"email\":\""+email+"\",\n\t\"password\": \""+password+"\",\n\t\"undelete\": false\n}"
+def get_token(email, password):
+    conn = http.client.HTTPSConnection('discordapp.com')
 
-headers = {
-    'content-type': "application/json",
-    }
+    payload = '{"captcha_key":null, "email": "%s", "password": "%s", "undelete": false}' % (
+        email, password)
 
-conn.request("POST", "/api/v6/auth/login", payload, headers)
+    headers = {'content-type': 'application/json'}
 
-res = conn.getresponse()
-data = res.read()
+    conn.request('POST', '/api/v6/auth/login', payload, headers)
 
-print(data.decode("utf-8"))
+    res = conn.getresponse()
+    data = res.read()
+
+    return json.loads(data)
+
+
+print(get_token(input('Enter your email: '), getpass.getpass('Enter your password: ')))
