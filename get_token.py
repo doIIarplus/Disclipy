@@ -14,6 +14,7 @@ def get_token(email: str, password: str):
         dict containing:
             {
                 'token': str,
+                'incorrect_email_format': bool,
                 'incorrect_password': bool,
                 'captcha_required': bool
             }
