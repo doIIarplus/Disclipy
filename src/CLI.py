@@ -9,6 +9,7 @@ class CLI(Observer):
 	def __init__(self):
 		Observer.__init__(self)
 		self.client = DiscordClient(self)
+		click.clear()
 
 	def login(self):
 		self.client.login_with_email_password(
