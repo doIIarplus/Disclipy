@@ -1,3 +1,4 @@
+"""
 from prompt_toolkit import prompt
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
@@ -14,3 +15,13 @@ if __name__ == '__main__':
                             completer=AutoCompleter,
                             )
         print(user_input)
+"""
+from src import DiscordClient
+from src import CLI
+
+from getpass import getpass
+
+if __name__ == '__main__':
+    cli = CLI()
+    client = cli.client
+    client.login_with_email_password(input('enter email: '), getpass('enter password: '))
