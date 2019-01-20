@@ -1,10 +1,14 @@
 from .DiscordClient import DiscordClient
 from .observer import Observer
+from getpass import getpass
 
 class CLI(Observer):
 	def __init__(self):
 		Observer.__init__(self)
 		self.client = DiscordClient(self)
+
+	def login(self):
+		self.client.login_with_email_password(input('enter email: '), getpass('enter password: '))
 
 	def update(self, action):
 		# TODO implement functionality

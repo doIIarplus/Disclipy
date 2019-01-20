@@ -23,5 +23,4 @@ from getpass import getpass
 
 if __name__ == '__main__':
     cli = CLI()
-    client = cli.client
-    client.login_with_email_password(input('enter email: '), getpass('enter password: '))
+    cli.login()
