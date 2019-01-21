@@ -19,15 +19,15 @@ class DiscordClient(discord.Client, Subject):
         # self.loop.create_task(self.on_testevent())
 
     async def on_ready(self):
-        self.notify('login_successful')
+        await self.notify('login_successful')
         self.logged_in = True
 
     async def on_message(self, message):
-        self.notify('message', message)
+        await self.notify('message', message)
 
     async def on_open_channel(self, channel):
         async for message in channel.history(limit=10, reverse=True):
-            self.notify('message', message)
+            await self.notify('message', message)
 
     def emit(self, event: str, *args):
         fn = getattr(self, 'on_' + event)

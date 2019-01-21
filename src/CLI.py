@@ -14,6 +14,11 @@ from .Validators import (
 from xml.sax.saxutils import escape
 import click
 
+import asyncio
+
+from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
+from prompt_toolkit.patch_stdout import patch_stdout
+
 
 class CLI(Observer):
     def __init__(self, config_file):
@@ -47,13 +52,14 @@ class CLI(Observer):
                 with open(self.client.config_file, 'w') as configfile:
                     self.client.config.write(configfile)
         else:
-            self.update('login_in_progress')
+            self.client.loop.create_task(self.update('login_in_progress'))
             self.client.run(self.client.config['CREDENTIALS']['Token'], bot=False)
 
     def open_channel(self):
         click.clear()
         self.channel_open = True
         self.client.emit('open_channel', self.current_channel)
+        asyncio.ensure_future(self.channel_prompt())
 
     def display_guilds(self):
         guilds = ''
@@ -98,7 +104,16 @@ class CLI(Observer):
 
             self.open_channel()
 
-    def update(self, action: str, data=None):
+    async def channel_prompt(self):
+        if self.current_channel:
+            use_asyncio_event_loop()
+
+            with patch_stdout():
+                msg = await prompt('>', async_=True)
+                await self.current_channel.send(msg)
+                await self.channel_prompt()
+
+    async def update(self, action: str, data=None):
         """Prints information passed by DiscordClient
         """
         # login actions
@@ -116,9 +131,9 @@ class CLI(Observer):
             self.login()
         elif action == 'login_captcha_required':
             click.secho(
-                'Captcha required.\n' +
-                'Please login through the Discord web client first.\n' +
-                'https://discordapp.com/login', fg='red', bold=True)
+                'Captcha required.\n'
+                + 'Please login through the Discord web client first.\n'
+                + 'https://discordapp.com/login', fg='red', bold=True)
             self.login()
 
         # message actions
