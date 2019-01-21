@@ -2,5 +2,5 @@
 venv/
 *.txt
 !requirements.txt
-__pycache__/
+__pycache__/8================D
 *.pyc
