@@ -6,6 +6,10 @@ from prompt_toolkit import prompt, print_formatted_text
 from prompt_toolkit.styles import Style
 from prompt_toolkit.styles.pygments import style_from_pygments_cls
 from pygments.styles import get_style_by_name
+from .Validators import (
+    JoinableGuildListValidator,
+    JoinableChannelListValidator
+)
 import click
 
 
@@ -14,6 +18,10 @@ class CLI(Observer):
         Observer.__init__(self)
         self.client = DiscordClient(self, config_file)
         click.clear()
+
+        self.current_guild = None
+        self.current_channel = None
+
 
     def login(self):
         # Check config file for setup status
@@ -47,10 +55,8 @@ class CLI(Observer):
             click.echo('Logging in...')
         elif action == 'login_successful':
             click.clear()
-            click.secho('You are logged in.', fg='black', bg='white');
+            click.secho('You are logged in.', fg='black', bg='white')
             self.display_guilds()
-            print('Select a server by entering the corresponding server number')
-            self.select_guild(prompt('>'))
         elif action == 'login_incorrect_email_format':
             click.secho('Not a well formed email address.', fg='red', bold=True)
             self.login()
@@ -64,20 +70,38 @@ class CLI(Observer):
                 'https://discordapp.com/login', fg='red', bold=True)
             self.login()
 
+
     def display_guilds(self):
         guilds = ''
         for i, guild in enumerate(self.client.guilds):
             guilds += '{0}: {1}\n'.format(i, guild.name)
         click.echo_via_pager(guilds)
+        print('Select a server by entering the corresponding server number')
+        self.select_guild()
 
-    def select_guild(self, selection):
-        while(
-            not str.isdigit(selection) or 
-            not int(selection) in range(0, len(self.client.guilds))
-        ):
-            print('Selection invalid. Please enter a valid number ranging from 0 to {0}'.format(len(self.client.guilds)))
-            selection = prompt('>')
-
+    def select_guild(self):
+        selection = int(prompt('>', validator=JoinableGuildListValidator(len(self.client.guilds))))
         self.current_guild = self.client.guilds[int(selection)]
         click.clear()
-        print('Connected to {}'.format(self.current_guild.name))
+        click.secho('Connected to {}'.format(self.current_guild.name), fg='black', bg='white')
+        self.select_channel()
+
+
+    def select_channel(self):
+        if self.current_guild:
+            channels = ''
+            text_channels = self.current_guild.text_channels
+
+            for channel in text_channels:
+                channels += '#'+channel.name+'\n'
+
+            click.echo_via_pager(channels)
+            print('Select a channel by entering the corresponding #channel-name')
+            
+            selection = prompt('>', validator=JoinableChannelListValidator(text_channels))
+
+            for channel in text_channels:
+                if selection[1:] == channel.name:
+                    self.current_channel = channel
+            
+            # open the channel
