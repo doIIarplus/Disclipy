@@ -6,9 +6,14 @@ import configparser
 
 
 class DiscordClient(discord.Client, Subject):
-    def __init__(self, cli, config):
+    def __init__(self, cli, config_file):
         discord.Client.__init__(self)
         Subject.__init__(self)
+
+        self.config_file = config_file
+        self.config = configparser.ConfigParser(allow_no_value=True)
+        self.config.read(config_file)
+        print(self.config)
 
         self.attach(cli)
 
@@ -80,6 +85,7 @@ class DiscordClient(discord.Client, Subject):
 
         if res['token']:
             self.notify('login_in_progress')
+            self.session_token = res['token']
             self.run(res['token'], bot=False)
         elif res['incorrect_email_format']:
             self.notify('login_incorrect_email_format')

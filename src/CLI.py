@@ -10,16 +10,36 @@ import click
 
 
 class CLI(Observer):
-    def __init__(self, config):
+    def __init__(self, config_file):
         Observer.__init__(self)
-        self.client = DiscordClient(self, config)
+        self.client = DiscordClient(self, config_file)
         click.clear()
 
     def login(self):
         # Check config file for setup status
-        email = prompt('Email: ')
-        password = prompt('Password: ', is_password=True)
-        self.client.login_with_email_password(email, password)
+        if self.client.config['CREDENTIALS']['Token'] == 'placeholder_token':
+            email = prompt('Email: ')
+            password = prompt('Password: ', is_password=True)
+
+            if not self.client.config['CREDENTIALS']['AutoLogin']:
+                auto_login = prompt('Automatically login in the future? y/n: ')
+                while auto_login not in ['y', 'n']:
+                    auto_login = prompt('Invalid selection. Please select y/n')
+
+                self.client.login_with_email_password(email, password)
+
+                if auto_login:
+                    self.client.config['CREDENTIALS']['AutoLogin'] = 'True'
+                    self.client.config['CREDENTIALS']['Token'] = self.client.session_token
+                else:
+                    self.client.config['CREDENTIALS']['Autologin'] = 'False'
+
+                with open(self.client.config_file, 'w') as configfile:
+                    self.client.config.write(configfile)
+        else:
+            self.client.notify('login_in_progress')
+            self.client.run(self.client.config['CREDENTIALS']['Token'], bot=False)
+
 
     def update(self, action):
         # login actions
