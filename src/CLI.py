@@ -12,6 +12,7 @@ from .Validators import (
     JoinableChannelListValidator
 )
 import click
+import discord
 
 
 class CLI(Observer):
@@ -70,6 +71,19 @@ class CLI(Observer):
                 'Please login through the Discord web client first.\n'+
                 'https://discordapp.com/login', fg='red', bold=True)
             self.login()
+        elif isinstance(action, discord.Message):
+            if self.current_channel != None:
+                if self.current_channel.id == action.channel.id and self.channel_open == True:
+                    print(action.content)
+
+    async def __get_channel_history(self):
+        async for message in self.current_channel.history(limit=10,reverse=True):
+            print(message.content)
+
+    def open_channel(self):
+        click.clear()
+        self.channel_open = True
+        self.client.loop.create_task(self.__get_channel_history())
 
 
     def display_guilds(self):
@@ -109,4 +123,4 @@ class CLI(Observer):
                 if selection[1:] == channel.name:
                     self.current_channel = channel
             
-            # open the channel
+            self.open_channel()

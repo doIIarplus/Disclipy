@@ -21,6 +21,9 @@ class DiscordClient(discord.Client, Subject):
         self.notify('login_successful')
         self.logged_in = True
 
+    async def on_message(self, message):
+        self.notify(message)
+
     def __get_token(self, email: str, password: str):
         """Returns a Discord user token.
 
