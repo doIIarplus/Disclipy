@@ -3,6 +3,7 @@ from .observer import Observer
 from getpass import getpass
 
 from prompt_toolkit import prompt, print_formatted_text
+from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.styles import Style
 from prompt_toolkit.styles.pygments import style_from_pygments_cls
 from pygments.styles import get_style_by_name
@@ -98,7 +99,11 @@ class CLI(Observer):
             click.echo_via_pager(channels)
             print('Select a channel by entering the corresponding #channel-name')
             
-            selection = prompt('>', validator=JoinableChannelListValidator(text_channels))
+            completer = WordCompleter(['#'+t.name for t in text_channels])
+
+            selection = prompt('>',
+                validator=JoinableChannelListValidator(text_channels),
+                completer=completer)
 
             for channel in text_channels:
                 if selection[1:] == channel.name:
