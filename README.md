@@ -9,10 +9,7 @@
 ### Doc References
 
 - [prompt_toolkit](https://python-prompt-toolkit.readthedocs.io/en/master/index.html)
-
-- [click](http://click.palletsprojects.com/en/7.x/)
-
-- [discord.py](https://discordpy.readthedocs.io/en/rewrite/)
+s.io/en/rewrite/)
 
 ### Setup virtual environment
 
