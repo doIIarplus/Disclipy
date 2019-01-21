@@ -45,8 +45,10 @@ class CLI(Observer):
             self.login()
 
     def display_guilds(self):
+        guilds = ''
         for i, guild in enumerate(self.client.guilds):
-            print("{0}: {1}".format(i, guild.name))
+            guilds += '{0}: {1}\n'.format(i, guild.name)
+        click.echo_via_pager(guilds)
 
     def select_guild(self, selection):
         while(
