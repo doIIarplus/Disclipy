@@ -24,6 +24,9 @@ class CLI(Observer):
 		# login actions
 		if action == 'login_successful':
 			click.clear()
+			self.display_guilds()
+			self.client.notify('Select a server by entering the corresponding server number')
+			self.select_guild(prompt('>'))
 			pass
 		elif action == 'login_incorrect_email_format':
 			# prompt user to enter correct email format
@@ -34,3 +37,20 @@ class CLI(Observer):
 		elif action == 'login_captcha_required':
 			# prompt user to log into Discord's Web client first
 			pass
+
+	def display_guilds(self):
+		for i, guild in enumerate(self.client.guilds):
+			print("{0}: {1}".format(i, guild.name))
+
+	def select_guild(self, selection):
+		while(
+			not str.isdigit(selection) or 
+			not int(selection) in range(0, len(self.client.guilds))
+		):
+			self.client.notify('Selection invalid. Please enter a valid number ranging from 0 to {0}'.format(len(self.client.guilds)))
+			selection = prompt('>')
+
+		self.current_guild = self.client.guilds[int(selection)]
+		click.clear()
+		self.client.notify('Connected to {}'.format(self.current_guild.name))
+

@@ -16,6 +16,7 @@ if __name__ == '__main__':
                             )
         print(user_input)
 """
+from prompt_toolkit import prompt
 from src import DiscordClient
 from src import CLI
 
@@ -24,3 +25,13 @@ from getpass import getpass
 if __name__ == '__main__':
     cli = CLI()
     cli.login()
+
+    #while True:
+    	#user_input = prompt('>')
+    	#print(user_input)
+
+    # Select Server
+
+    # Select Channel
+
+
