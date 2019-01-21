@@ -2,7 +2,7 @@ from .DiscordClient import DiscordClient
 from .observer import Observer
 from getpass import getpass
 
-from prompt_toolkit import prompt
+from prompt_toolkit import prompt, print_formatted_text, HTML
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.styles import Style
 from prompt_toolkit.styles.pygments import style_from_pygments_cls
@@ -11,8 +11,8 @@ from .Validators import (
     JoinableGuildListValidator,
     JoinableChannelListValidator
 )
+from xml.sax.saxutils import escape
 import click
-import discord
 
 
 class CLI(Observer):
@@ -126,4 +126,9 @@ class CLI(Observer):
             msg = data
             if self.current_channel:
                 if self.current_channel.id == msg.channel.id and self.channel_open:
-                    click.echo(msg.content)
+                    print_formatted_text(HTML(
+                        '<_ fg="%s">%s</_>> %s' % (
+                            str(msg.author.color),
+                            msg.author.display_name,
+                            escape(msg.content)
+                        )))
