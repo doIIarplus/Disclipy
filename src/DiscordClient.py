@@ -82,7 +82,6 @@ class DiscordClient(discord.Client, Subject):
 
         return ret
 
-
     def login_with_email_password(self, email, password):
         res = self.__get_token(email, password)
 

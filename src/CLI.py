@@ -24,7 +24,6 @@ class CLI(Observer):
         self.current_guild = None
         self.current_channel = None
 
-
     def login(self):
         # Check config file for setup status
         if self.client.config['CREDENTIALS']['Token'] == 'placeholder_token':
@@ -50,7 +49,6 @@ class CLI(Observer):
             self.client.notify('login_in_progress')
             self.client.run(self.client.config['CREDENTIALS']['Token'], bot=False)
 
-
     def update(self, action):
         # login actions
         if action == 'login_in_progress':
@@ -67,24 +65,23 @@ class CLI(Observer):
             self.login()
         elif action == 'login_captcha_required':
             click.secho(
-                'Captcha required.\n'+
-                'Please login through the Discord web client first.\n'+
+                'Captcha required.\n' +
+                'Please login through the Discord web client first.\n' +
                 'https://discordapp.com/login', fg='red', bold=True)
             self.login()
         elif isinstance(action, discord.Message):
             if self.current_channel != None:
-                if self.current_channel.id == action.channel.id and self.channel_open == True:
+                if self.current_channel.id == action.channel.id and self.channel_open:
                     print(action.content)
 
     async def __get_channel_history(self):
-        async for message in self.current_channel.history(limit=10,reverse=True):
+        async for message in self.current_channel.history(limit=10, reverse=True):
             print(message.content)
 
     def open_channel(self):
         click.clear()
         self.channel_open = True
         self.client.loop.create_task(self.__get_channel_history())
-
 
     def display_guilds(self):
         guilds = ''
@@ -95,12 +92,16 @@ class CLI(Observer):
         self.select_guild()
 
     def select_guild(self):
-        selection = int(prompt('>', validator=JoinableGuildListValidator(len(self.client.guilds))))
+        selection = int(
+            prompt('>', validator=JoinableGuildListValidator(len(self.client.guilds))))
         self.current_guild = self.client.guilds[int(selection)]
         click.clear()
-        click.secho('Connected to {}'.format(self.current_guild.name), fg='black', bg='white')
+        click.secho(
+            'Connected to {}'.format(
+                self.current_guild.name),
+            fg='black',
+            bg='white')
         self.select_channel()
-
 
     def select_channel(self):
         if self.current_guild:
@@ -108,19 +109,19 @@ class CLI(Observer):
             text_channels = self.current_guild.text_channels
 
             for channel in text_channels:
-                channels += '#'+channel.name+'\n'
+                channels += '#' + channel.name + '\n'
 
             click.echo_via_pager(channels)
             print('Select a channel by entering the corresponding #channel-name')
-            
-            completer = WordCompleter(['#'+t.name for t in text_channels])
+
+            completer = WordCompleter(['#' + t.name for t in text_channels])
 
             selection = prompt('>',
-                validator=JoinableChannelListValidator(text_channels),
-                completer=completer)
+                               validator=JoinableChannelListValidator(text_channels),
+                               completer=completer)
 
             for channel in text_channels:
                 if selection[1:] == channel.name:
                     self.current_channel = channel
-            
+
             self.open_channel()
