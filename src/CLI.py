@@ -1,5 +1,6 @@
 from .DiscordClient import DiscordClient
 from .observer import Observer
+from .Config import *
 from getpass import getpass
 
 from prompt_toolkit import prompt, print_formatted_text, HTML
@@ -15,15 +16,16 @@ from xml.sax.saxutils import escape
 import click
 
 import asyncio
+import discord
 
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
 
 
 class CLI(Observer):
-    def __init__(self, config_file):
+    def __init__(self, config):
         Observer.__init__(self)
-        self.client = DiscordClient(self, config_file)
+        self.client = DiscordClient(self, config)
         click.clear()
 
         self.current_guild = None
@@ -32,11 +34,12 @@ class CLI(Observer):
 
     def login(self):
         # Check config file for setup status
-        if self.client.config['CREDENTIALS']['Token'] == 'placeholder_token':
+        credentials = self.client.config[CREDENTIALS]
+        if credentials[TOKEN] == DEFAULT_TOKEN:
             email = prompt('Email: ')
             password = prompt('Password: ', is_password=True)
 
-            if not self.client.config['CREDENTIALS']['AutoLogin']:
+            if not credentials[AUTOLOGIN]:
                 auto_login = prompt('Automatically login in the future? y/n: ')
                 while auto_login not in ['y', 'n']:
                     auto_login = prompt('Invalid selection. Please select y/n')
@@ -44,16 +47,16 @@ class CLI(Observer):
                 self.client.login_with_email_password(email, password)
 
                 if auto_login:
-                    self.client.config['CREDENTIALS']['AutoLogin'] = 'True'
-                    self.client.config['CREDENTIALS']['Token'] = self.client.session_token
+                    credentials[AUTOLOGIN] = 'True'
+                    credentials[TOKEN] = self.client.session_token
                 else:
-                    self.client.config['CREDENTIALS']['Autologin'] = 'False'
+                    credentials[AUTOLOGIN] = 'False'
 
-                with open(self.client.config_file, 'w') as configfile:
+                with open(CONFIG_FILE, 'w') as configfile:
                     self.client.config.write(configfile)
         else:
             self.client.loop.create_task(self.update('login_in_progress'))
-            self.client.run(self.client.config['CREDENTIALS']['Token'], bot=False)
+            self.client.run(credentials[TOKEN], bot=False)
 
     def open_channel(self):
         click.clear()
@@ -139,11 +142,13 @@ class CLI(Observer):
         # message actions
         elif action == 'message':
             msg = data
+            color = discord.Color.from_rgb(
+                255, 255, 255) if msg.author.color == discord.Color.default() else msg.author.color
             if self.current_channel:
                 if self.current_channel.id == msg.channel.id and self.channel_open:
                     print_formatted_text(HTML(
                         '<_ fg="%s">%s</_>> %s' % (
-                            str(msg.author.color),
+                            str(color),
                             msg.author.display_name,
                             escape(msg.content)
                         )))

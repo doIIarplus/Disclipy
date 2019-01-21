@@ -2,19 +2,14 @@ from .observer import Subject
 import http.client
 import json
 import discord
-import configparser
 
 
 class DiscordClient(discord.Client, Subject):
-    def __init__(self, cli, config_file):
+    def __init__(self, cli, config):
         discord.Client.__init__(self)
         Subject.__init__(self)
 
-        self.config_file = config_file
-        self.config = configparser.ConfigParser(allow_no_value=True)
-        self.config.read(config_file)
-        print(self.config)
-
+        self.config = config
         self.attach(cli)
         # self.loop.create_task(self.on_testevent())
 
@@ -91,16 +86,16 @@ class DiscordClient(discord.Client, Subject):
 
         return ret
 
-    def login_with_email_password(self, email, password):
+    async def login_with_email_password(self, email, password):
         res = self.__get_token(email, password)
 
         if res['token']:
-            self.notify('login_in_progress')
+            await self.notify('login_in_progress')
             self.session_token = res['token']
             self.run(res['token'], bot=False)
         elif res['incorrect_email_format']:
-            self.notify('login_incorrect_email_format')
+            await self.notify('login_incorrect_email_format')
         elif res['incorrect_password']:
-            self.notify('login_incorrect_password')
+            await self.notify('login_incorrect_password')
         elif res['captcha_required']:
-            self.notify('login_captcha_required')
+            await self.notify('login_captcha_required')
