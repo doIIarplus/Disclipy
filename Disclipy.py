@@ -23,7 +23,7 @@ from src import CLI
 from getpass import getpass
 
 if __name__ == '__main__':
-    cli = CLI()
+    cli = CLI('config.ini')
     cli.login()
 
     # while True:

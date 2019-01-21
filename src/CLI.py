@@ -10,51 +10,52 @@ import click
 
 
 class CLI(Observer):
-	def __init__(self):
-		Observer.__init__(self)
-		self.client = DiscordClient(self)
-		click.clear()
+    def __init__(self, config):
+        Observer.__init__(self)
+        self.client = DiscordClient(self, config)
+        click.clear()
 
-	def login(self):
-		email = prompt('Email: ')
-		password = prompt('Password: ', is_password=True)
-		self.client.login_with_email_password(email, password)
+    def login(self):
+        # Check config file for setup status
+        email = prompt('Email: ')
+        password = prompt('Password: ', is_password=True)
+        self.client.login_with_email_password(email, password)
 
-	def update(self, action):
-		# login actions
-		if action == 'login_in_progress':
-			click.echo('Logging in...')
-		elif action == 'login_successful':
-			click.clear()
-			click.secho('You are logged in.', fg='black', bg='white');
-			self.display_guilds()
-			print('Select a server by entering the corresponding server number')
-			self.select_guild(prompt('>'))
-		elif action == 'login_incorrect_email_format':
-			click.secho('Not a well formed email address.', fg='red', bold=True)
-			self.login()
-		elif action == 'login_incorrect_password':
-			click.secho('Password is incorrect.', fg='red', bold=True)
-			self.login()
-		elif action == 'login_captcha_required':
-			click.secho(
-				'Captcha required.\n'+
-				'Please login through the Discord web client first.\n'+
-				'https://discordapp.com/login', fg='red', bold=True)
-			self.login()
+    def update(self, action):
+        # login actions
+        if action == 'login_in_progress':
+            click.echo('Logging in...')
+        elif action == 'login_successful':
+            click.clear()
+            click.secho('You are logged in.', fg='black', bg='white');
+            self.display_guilds()
+            print('Select a server by entering the corresponding server number')
+            self.select_guild(prompt('>'))
+        elif action == 'login_incorrect_email_format':
+            click.secho('Not a well formed email address.', fg='red', bold=True)
+            self.login()
+        elif action == 'login_incorrect_password':
+            click.secho('Password is incorrect.', fg='red', bold=True)
+            self.login()
+        elif action == 'login_captcha_required':
+            click.secho(
+                'Captcha required.\n'+
+                'Please login through the Discord web client first.\n'+
+                'https://discordapp.com/login', fg='red', bold=True)
+            self.login()
 
-	def display_guilds(self):
-		for i, guild in enumerate(self.client.guilds):
-			print("{0}: {1}".format(i, guild.name))
+    def display_guilds(self):
+        for i, guild in enumerate(self.client.guilds):
+            print("{0}: {1}".format(i, guild.name))
 
-	def select_guild(self, selection):
-		while(
-			not str.isdigit(selection) or 
-			not int(selection) in range(0, len(self.client.guilds))
-		):
-			print('Selection invalid. Please enter a valid number ranging from 0 to {0}'.format(len(self.client.guilds)))
-			selection = prompt('>')
+    def select_guild(self, selection):
+        while(
+            not str.isdigit(selection) or 
+            not int(selection) in range(0, len(self.client.guilds))
+        ):
+            print('Selection invalid. Please enter a valid number ranging from 0 to {0}'.format(len(self.client.guilds)))
+            selection = prompt('>')
 
-		self.current_guild = self.client.guilds[int(selection)]
-		click.clear()
-		print('Connected to {}'.format(self.current_guild.name))
+        self.current_guild = self.client.guilds[int(selection)]
+        click.clear()
+        print('Connected to {}'.format(self.current_guild.name))

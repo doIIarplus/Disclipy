@@ -2,10 +2,11 @@ from .observer import Subject
 import http.client
 import json
 import discord
+import configparser
 
 
 class DiscordClient(discord.Client, Subject):
-    def __init__(self, cli):
+    def __init__(self, cli, config):
         discord.Client.__init__(self)
         Subject.__init__(self)
 
