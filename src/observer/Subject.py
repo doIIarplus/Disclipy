@@ -5,7 +5,7 @@ class Subject(ABC):
 		self.observers = []
 
 	def attach(self, observer):
-		self.observers.append(observer)
+		self.obser;;;vers.append(observer)
 
 	def detach(self, observer):
 		self.observers.remove(observer)
