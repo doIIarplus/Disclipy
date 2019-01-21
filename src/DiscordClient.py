@@ -86,16 +86,16 @@ class DiscordClient(discord.Client, Subject):
 
         return ret
 
-    async def login_with_email_password(self, email, password):
+    def login_with_email_password(self, email, password):
         res = self.__get_token(email, password)
 
         if res['token']:
-            await self.notify('login_in_progress')
+            self.notify('login_in_progress')
             self.session_token = res['token']
             self.run(res['token'], bot=False)
         elif res['incorrect_email_format']:
-            await self.notify('login_incorrect_email_format')
+            self.notify('login_incorrect_email_format')
         elif res['incorrect_password']:
-            await self.notify('login_incorrect_password')
+            self.notify('login_incorrect_password')
         elif res['captcha_required']:
-            await self.notify('login_captcha_required')
+            self.notify('login_captcha_required')
