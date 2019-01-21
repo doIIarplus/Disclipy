@@ -1,2 +1,2 @@
 from .CLI import CLI
-from .DiscordClient import DiscordClient
+from .D import DiscordClient
