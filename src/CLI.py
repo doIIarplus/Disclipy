@@ -2,8 +2,12 @@ from .DiscordClient import DiscordClient
 from .observer import Observer
 from getpass import getpass
 
-from prompt_toolkit import prompt
+from prompt_toolkit import prompt, print_formatted_text
+from prompt_toolkit.styles import Style
+from prompt_toolkit.styles.pygments import style_from_pygments_cls
+from pygments.styles import get_style_by_name
 import click
+
 
 class CLI(Observer):
 	def __init__(self):
@@ -12,31 +16,32 @@ class CLI(Observer):
 		click.clear()
 
 	def login(self):
-		self.client.login_with_email_password(
-			prompt('Email: '),
-			prompt('Password: ', is_password=True))
+		email = prompt('Email: ')
+		password = prompt('Password: ', is_password=True)
+		self.client.login_with_email_password(email, password)
 
 	def update(self, action):
-		# TODO implement functionality
-
-		print(action)
-
 		# login actions
-		if action == 'login_successful':
+		if action == 'login_in_progress':
+			click.echo('Logging in...')
+		elif action == 'login_successful':
 			click.clear()
+			click.secho('You are logged in.', fg='black', bg='white');
 			self.display_guilds()
 			print('Select a server by entering the corresponding server number')
 			self.select_guild(prompt('>'))
-			pass
 		elif action == 'login_incorrect_email_format':
-			# prompt user to enter correct email format
-			pass
+			click.secho('Not a well formed email address.', fg='red', bold=True)
+			self.login()
 		elif action == 'login_incorrect_password':
-			# prompt user to enter correct password
-			pass
+			click.secho('Password is incorrect.', fg='red', bold=True)
+			self.login()
 		elif action == 'login_captcha_required':
-			# prompt user to log into Discord's Web client first
-			pass
+			click.secho(
+				'Captcha required.\n'+
+				'Please login through the Discord web client first.\n'+
+				'https://discordapp.com/login', fg='red', bold=True)
+			self.login()
 
 	def display_guilds(self):
 		for i, guild in enumerate(self.client.guilds):
@@ -53,4 +58,3 @@ class CLI(Observer):
 		self.current_guild = self.client.guilds[int(selection)]
 		click.clear()
 		print('Connected to {}'.format(self.current_guild.name))
-

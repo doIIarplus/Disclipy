@@ -78,6 +78,7 @@ class DiscordClient(discord.Client, Subject):
         res = self.__get_token(email, password)
 
         if res['token']:
+            self.notify('login_in_progress')
             self.run(res['token'], bot=False)
         elif res['incorrect_email_format']:
             self.notify('login_incorrect_email_format')
