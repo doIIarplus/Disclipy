@@ -2,7 +2,7 @@ from .DiscordClient import DiscordClient
 from .observer import Observer
 from getpass import getpass
 
-from prompt_toolkit import prompt, print_formatted_text
+from prompt_toolkit import prompt
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.styles import Style
 from prompt_toolkit.styles.pygments import style_from_pygments_cls
@@ -23,6 +23,7 @@ class CLI(Observer):
 
         self.current_guild = None
         self.current_channel = None
+        self.channel_open = False
 
     def login(self):
         # Check config file for setup status
@@ -46,49 +47,20 @@ class CLI(Observer):
                 with open(self.client.config_file, 'w') as configfile:
                     self.client.config.write(configfile)
         else:
-            self.client.notify('login_in_progress')
+            self.update('login_in_progress')
             self.client.run(self.client.config['CREDENTIALS']['Token'], bot=False)
-
-    def update(self, action):
-        # login actions
-        if action == 'login_in_progress':
-            click.echo('Logging in...')
-        elif action == 'login_successful':
-            click.clear()
-            click.secho('You are logged in.', fg='black', bg='white')
-            self.display_guilds()
-        elif action == 'login_incorrect_email_format':
-            click.secho('Not a well formed email address.', fg='red', bold=True)
-            self.login()
-        elif action == 'login_incorrect_password':
-            click.secho('Password is incorrect.', fg='red', bold=True)
-            self.login()
-        elif action == 'login_captcha_required':
-            click.secho(
-                'Captcha required.\n' +
-                'Please login through the Discord web client first.\n' +
-                'https://discordapp.com/login', fg='red', bold=True)
-            self.login()
-        elif isinstance(action, discord.Message):
-            if self.current_channel != None:
-                if self.current_channel.id == action.channel.id and self.channel_open:
-                    print(action.content)
-
-    async def __get_channel_history(self):
-        async for message in self.current_channel.history(limit=10, reverse=True):
-            print(message.content)
 
     def open_channel(self):
         click.clear()
         self.channel_open = True
-        self.client.loop.create_task(self.__get_channel_history())
+        self.client.emit('open_channel', self.current_channel)
 
     def display_guilds(self):
         guilds = ''
         for i, guild in enumerate(self.client.guilds):
             guilds += '{0}: {1}\n'.format(i, guild.name)
         click.echo_via_pager(guilds)
-        print('Select a server by entering the corresponding server number')
+        click.echo('Select a server by entering the corresponding server number')
         self.select_guild()
 
     def select_guild(self):
@@ -112,7 +84,7 @@ class CLI(Observer):
                 channels += '#' + channel.name + '\n'
 
             click.echo_via_pager(channels)
-            print('Select a channel by entering the corresponding #channel-name')
+            click.echo('Select a channel by entering the corresponding #channel-name')
 
             completer = WordCompleter(['#' + t.name for t in text_channels])
 
@@ -125,3 +97,33 @@ class CLI(Observer):
                     self.current_channel = channel
 
             self.open_channel()
+
+    def update(self, action: str, data=None):
+        """Prints information passed by DiscordClient
+        """
+        # login actions
+        if action == 'login_in_progress':
+            click.echo('Logging in...')
+        elif action == 'login_successful':
+            click.clear()
+            click.secho('You are logged in.', fg='black', bg='white')
+            self.display_guilds()
+        elif action == 'login_incorrect_email_format':
+            click.secho('Not a well formed email address.', fg='red', bold=True)
+            self.login()
+        elif action == 'login_incorrect_password':
+            click.secho('Password is incorrect.', fg='red', bold=True)
+            self.login()
+        elif action == 'login_captcha_required':
+            click.secho(
+                'Captcha required.\n' +
+                'Please login through the Discord web client first.\n' +
+                'https://discordapp.com/login', fg='red', bold=True)
+            self.login()
+
+        # message actions
+        elif action == 'message':
+            msg = data
+            if self.current_channel:
+                if self.current_channel.id == msg.channel.id and self.channel_open:
+                    click.echo(msg.content)

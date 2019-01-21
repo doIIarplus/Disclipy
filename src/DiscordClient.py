@@ -16,13 +16,22 @@ class DiscordClient(discord.Client, Subject):
         print(self.config)
 
         self.attach(cli)
+        # self.loop.create_task(self.on_testevent())
 
     async def on_ready(self):
         self.notify('login_successful')
         self.logged_in = True
 
     async def on_message(self, message):
-        self.notify(message)
+        self.notify('message', message)
+
+    async def on_open_channel(self, channel):
+        async for message in channel.history(limit=10, reverse=True):
+            self.notify('message', message)
+
+    def emit(self, event: str, *args):
+        fn = getattr(self, 'on_' + event)
+        self.loop.create_task(fn(*args))
 
     def __get_token(self, email: str, password: str):
         """Returns a Discord user token.
