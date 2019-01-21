@@ -11,10 +11,9 @@ class DiscordClient(discord.Client, Subject):
 
         self.attach(cli)
 
-        @self.event
-        async def on_ready():
-            self.notify('login_successful')
-            self.logged_in = True
+    async def on_ready(self):
+        self.notify('login_successful')
+        self.logged_in = True
 
     def __get_token(self, email: str, password: str):
         """Returns a Discord user token.

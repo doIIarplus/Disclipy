@@ -25,7 +25,7 @@ class CLI(Observer):
 		if action == 'login_successful':
 			click.clear()
 			self.display_guilds()
-			self.client.notify('Select a server by entering the corresponding server number')
+			print('Select a server by entering the corresponding server number')
 			self.select_guild(prompt('>'))
 			pass
 		elif action == 'login_incorrect_email_format':
@@ -47,10 +47,10 @@ class CLI(Observer):
 			not str.isdigit(selection) or 
 			not int(selection) in range(0, len(self.client.guilds))
 		):
-			self.client.notify('Selection invalid. Please enter a valid number ranging from 0 to {0}'.format(len(self.client.guilds)))
+			print('Selection invalid. Please enter a valid number ranging from 0 to {0}'.format(len(self.client.guilds)))
 			selection = prompt('>')
 
 		self.current_guild = self.client.guilds[int(selection)]
 		click.clear()
-		self.client.notify('Connected to {}'.format(self.current_guild.name))
+		print('Connected to {}'.format(self.current_guild.name))
 

@@ -26,12 +26,10 @@ if __name__ == '__main__':
     cli = CLI()
     cli.login()
 
-    #while True:
-    	#user_input = prompt('>')
-    	#print(user_input)
+    # while True:
+    #user_input = prompt('>')
+    # print(user_input)
 
     # Select Server
 
     # Select Channel
-
-
