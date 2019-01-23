@@ -71,10 +71,9 @@ class CLI(Observer):
         for i, guild in enumerate(self.client.guilds):
             guilds += '{0}: {1}\n'.format(i, guild.name)
         click.echo_via_pager(guilds)
-        click.echo('Select a server by entering the corresponding server number')
-        self.select_guild()
 
     def select_guild(self):
+        click.echo('Select a server by entering the corresponding server number')
         selection = int(
             prompt('>', validator=JoinableGuildListValidator(len(self.client.guilds))))
         self.current_guild = self.client.guilds[int(selection)]
@@ -84,9 +83,10 @@ class CLI(Observer):
                 self.current_guild.name),
             fg='black',
             bg='white')
+        self.display_channels()
         self.select_channel()
 
-    def select_channel(self):
+    def display_channels(self):
         if self.current_guild:
             channels = ''
             text_channels = self.current_guild.text_channels
@@ -95,6 +95,11 @@ class CLI(Observer):
                 channels += '#' + channel.name + '\n'
 
             click.echo_via_pager(channels)
+
+    def select_channel(self):
+        if self.current_guild:
+            text_channels = self.current_guild.text_channels
+
             click.echo('Select a channel by entering the corresponding #channel-name')
 
             completer = WordCompleter(['#' + t.name for t in text_channels])
@@ -127,11 +132,11 @@ class CLI(Observer):
             cmds = CMD.get_command_list()
             CMD.print('Here is a list of commands:\n' + '\n'.join(cmds))
         elif CMD.LIST_GUILDS.match(msg):
-            pass
+            self.display_guilds()
         elif CMD.JOIN_GUILD.match(msg):
             pass
         elif CMD.LIST_CHANNELS.match(msg):
-            pass
+            self.display_channels()
         elif CMD.JOIN_CHANNEL.match(msg):
             pass
         else:
@@ -159,6 +164,7 @@ class CLI(Observer):
             if self.client.session_token:
                 self.config.set_token(self.client.session_token)
             self.display_guilds()
+            self.select_guild()
         elif action == 'login_incorrect_email_format':
             click.secho('Not a well formed email address.', fg='red', bold=True)
             self.login()

@@ -30,7 +30,9 @@ class ChatCommands:
 
     __commands = [
         LIST_GUILDS,
-        LIST_CHANNELS
+        JOIN_GUILD,
+        LIST_CHANNELS,
+        JOIN_CHANNEL
     ]
 
     @staticmethod
