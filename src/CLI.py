@@ -134,10 +134,28 @@ class CLI(Observer):
         elif CMD.LIST_GUILDS.match(msg):
             self.display_guilds()
         elif CMD.JOIN_GUILD.match(msg):
-            pass
+            try:
+                #guild_n = CMD.JOIN_GUILD.match(msg).group(1)
+                #guild_n = int(guild_n)
+                #self.current_guild = self.client.guilds[guild_n]
+                # this does not work right now
+                # TODO:
+                #self.current_channel = None
+                # self.display_channels()
+                # self.select_channel()
+                pass
+            except ValueError:
+                CMD.print(
+                    '"%s" not found. Please select a guild by index. Find the desired guild index by using:\n%s' %
+                    (guild_n, str(
+                        CMD.JOIN_GUILD)))
+            except IndexError:
+                CMD.print('Invalid guild index, must be in range 0-%s' %
+                          (str(len(self.client.guilds),)))
         elif CMD.LIST_CHANNELS.match(msg):
             self.display_channels()
         elif CMD.JOIN_CHANNEL.match(msg):
+            # CMD.JOIN_CHANNEL.match(msg).group(1)
             pass
         else:
             CMD.print(
