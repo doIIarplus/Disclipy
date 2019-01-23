@@ -21,42 +21,37 @@ import discord
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
 
+from .Config import ConfigManager
+
 
 class CLI(Observer):
-    def __init__(self, config):
+    def __init__(self):
         Observer.__init__(self)
-        self.client = DiscordClient(self, config)
-        click.clear()
+        self.client = DiscordClient(self)
+        # click.clear()
 
+        self.config = ConfigManager()
         self.current_guild = None
         self.current_channel = None
         self.channel_open = False
 
     def login(self):
-        # Check config file for setup status
-        credentials = self.client.config[CREDENTIALS]
-        if credentials[TOKEN] == DEFAULT_TOKEN:
+        if self.config.auto_login_enabled():
+            self.update('login_in_progress')
+            self.client.run(self.config.get_token(), bot=False)
+        else:
             email = prompt('Email: ')
             password = prompt('Password: ', is_password=True)
 
-            if not credentials[AUTOLOGIN]:
+            if self.config.first_time():
                 auto_login = prompt('Automatically login in the future? y/n: ')
                 while auto_login not in ['y', 'n']:
                     auto_login = prompt('Invalid selection. Please select y/n')
 
-                self.client.login_with_email_password(email, password)
+                if auto_login == 'y':
+                    self.config.enable_auto_login()
 
-                if auto_login:
-                    credentials[AUTOLOGIN] = 'True'
-                    credentials[TOKEN] = self.client.session_token
-                else:
-                    credentials[AUTOLOGIN] = 'False'
-
-                with open(CONFIG_FILE, 'w') as configfile:
-                    self.client.config.write(configfile)
-        else:
-            self.client.loop.create_task(self.update('login_in_progress'))
-            self.client.run(credentials[TOKEN], bot=False)
+            self.client.login_with_email_password(email, password)
 
     def open_channel(self):
         click.clear()
@@ -116,7 +111,7 @@ class CLI(Observer):
                 await self.current_channel.send(msg)
                 await self.channel_prompt()
 
-    async def update(self, action: str, data=None):
+    def update(self, action: str, data=None):
         """Prints information passed by DiscordClient
         """
         # login actions
@@ -125,6 +120,8 @@ class CLI(Observer):
         elif action == 'login_successful':
             click.clear()
             click.secho('You are logged in.', fg='black', bg='white')
+            if self.client.session_token:
+                self.config.set_token(self.client.session_token)
             self.display_guilds()
         elif action == 'login_incorrect_email_format':
             click.secho('Not a well formed email address.', fg='red', bold=True)
@@ -134,9 +131,9 @@ class CLI(Observer):
             self.login()
         elif action == 'login_captcha_required':
             click.secho(
-                'Captcha required.\n'
-                + 'Please login through the Discord web client first.\n'
-                + 'https://discordapp.com/login', fg='red', bold=True)
+                'Captcha required.\n' +
+                'Please login through the Discord web client first.\n' +
+                'https://discordapp.com/login', fg='red', bold=True)
             self.login()
 
         # message actions

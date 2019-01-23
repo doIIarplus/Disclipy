@@ -11,6 +11,6 @@ class Subject(ABC):
     def detach(self, observer):
         self.observers.remove(observer)
 
-    async def notify(self, action, *args):
+    def notify(self, action, *args):
         for o in self.observers:
-            await o.update(action, *args)
+            o.update(action, *args)

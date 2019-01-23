@@ -5,24 +5,24 @@ import discord
 
 
 class DiscordClient(discord.Client, Subject):
-    def __init__(self, cli, config):
+    def __init__(self, cli):
         discord.Client.__init__(self)
         Subject.__init__(self)
 
-        self.config = config
         self.attach(cli)
-        # self.loop.create_task(self.on_testevent())
+
+        self.session_token = None
 
     async def on_ready(self):
-        await self.notify('login_successful')
+        self.notify('login_successful')
         self.logged_in = True
 
     async def on_message(self, message):
-        await self.notify('message', message)
+        self.notify('message', message)
 
     async def on_open_channel(self, channel):
         async for message in channel.history(limit=10, reverse=True):
-            await self.notify('message', message)
+            self.notify('message', message)
 
     def emit(self, event: str, *args):
         fn = getattr(self, 'on_' + event)
