@@ -154,9 +154,9 @@ class CLI(Observer):
             self.login()
         elif action == 'login_captcha_required':
             click.secho(
-                'Captcha required.\n'
-                + 'Please login through the Discord web client first.\n'
-                + 'https://discordapp.com/login', fg='red', bold=True)
+                'Captcha required.\n' +
+                'Please login through the Discord web client first.\n' +
+                'https://discordapp.com/login', fg='red', bold=True)
             self.login()
 
         # message actions
@@ -172,6 +172,7 @@ class CLI(Observer):
                     for att in msg.attachments:
                         message += '\n' + att.proxy_url
 
+                    # add embed display
                     embeds = '\n' if msg.embeds else ''
                     for embed in msg.embeds:
                         #color_bar = '<_ bg="%s"> </_> ' % (str(embed.colour),)
@@ -211,6 +212,6 @@ class CLI(Observer):
                         '<_ fg="%s">%s</_>> %s' % (
                             str(color),
                             escape(msg.author.display_name),
-                            escape(message)
-                            + embeds
+                            escape(message) +
+                            embeds
                         )))
