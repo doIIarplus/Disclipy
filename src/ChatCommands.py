@@ -24,13 +24,15 @@ class ChatCommands:
     PREFIX = '/'
     HELP = Command(PREFIX, 'help')
     LIST_GUILDS = Command(PREFIX, 'list_guilds')
-    JOIN_GUILD = Command(PREFIX, 'join_guild', 'join_guild (.*)$')
+    JOIN_GUILD = Command(PREFIX, 'join_guild', r'join_guild \s*([0-9]+)\s*$')
     LIST_CHANNELS = Command(PREFIX, 'list_channels')
     JOIN_CHANNEL = Command(PREFIX, 'join_channel', 'join_channel #(.*)$')
 
     __commands = [
         LIST_GUILDS,
-        LIST_CHANNELS
+        JOIN_GUILD,
+        LIST_CHANNELS,
+        JOIN_CHANNEL
     ]
 
     @staticmethod

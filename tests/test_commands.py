@@ -47,10 +47,10 @@ class TestCommandMatching(unittest.TestCase):
         self.assertFalse(CMD.LIST_CHANNELS.match('/list_channel'))
 
     def test_join_guild(self):
-        self.assertTrue(CMD.JOIN_GUILD.match('/join_guild someguild'))
-        self.assertTrue(CMD.JOIN_GUILD.match('/join_guild some guild'))
-        self.assertTrue(CMD.JOIN_GUILD.match('/join_guild some-guild'))
-        self.assertTrue(CMD.JOIN_GUILD.match('/join_guild     some-guild  ds das d'))
+        self.assertTrue(CMD.JOIN_GUILD.match('/join_guild 0'))
+        self.assertTrue(CMD.JOIN_GUILD.match('/join_guild 08'))
+        self.assertTrue(CMD.JOIN_GUILD.match('/join_guild 189631'))
+        self.assertTrue(CMD.JOIN_GUILD.match('/join_guild     0    '))
         self.assertFalse(CMD.JOIN_GUILD.match('/join_guild          '))
         self.assertFalse(CMD.JOIN_GUILD.match('/join_guild '))
         self.assertFalse(CMD.JOIN_GUILD.match('/join_guil dsadasdadasd'))
