@@ -2,10 +2,8 @@ emojis = set()
 
 # from https://www.webfx.com/tools/emoji-cheat-sheet/
 emojis.add(':grin:')
-emojis.add(':non-potable_water:')
 emojis.add(':grimacing:')
 emojis.add(':innocent:')
-emojis.add(':phone:')
 emojis.add(':smiley:')
 emojis.add(':smile:')
 emojis.add(':sweat_smile:')
@@ -14,7 +12,6 @@ emojis.add(':wink:')
 emojis.add(':joy:')
 emojis.add(':satisfied:')
 emojis.add(':grinning:')
-emojis.add(':heavy_exclamation_mark:')
 
 
 # from manually going through emoji list in Discord
