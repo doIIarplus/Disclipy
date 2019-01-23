@@ -23,6 +23,8 @@ from prompt_toolkit.patch_stdout import patch_stdout
 
 from .Config import ConfigManager
 
+from .ChatCommands import ChatCommands as CMD
+
 
 class CLI(Observer):
     def __init__(self):
@@ -108,8 +110,22 @@ class CLI(Observer):
 
             with patch_stdout():
                 msg = await prompt('>', async_=True)
-                await self.current_channel.send(msg)
+                if not msg.startswith(CMD.PREFIX):
+                    if msg:
+                        await self.current_channel.send(msg)
+                else:
+                    self.handleCommands(msg)
                 await self.channel_prompt()
+
+    def handleCommands(self, msg):
+        if CMD.HELP.match(msg):
+            cmds = CMD.get_command_list()
+            CMD.print('Here is a list of commands:\n' + '\n'.join(cmds))
+        else:
+            CMD.print(
+                '"%s" command not found. Get a list of commands with:\n%s' % (
+                    msg, str(CMD.HELP)
+                ))
 
     def update(self, action: str, data=None):
         """Prints information passed by DiscordClient
@@ -132,9 +148,9 @@ class CLI(Observer):
             self.login()
         elif action == 'login_captcha_required':
             click.secho(
-                'Captcha required.\n' +
-                'Please login through the Discord web client first.\n' +
-                'https://discordapp.com/login', fg='red', bold=True)
+                'Captcha required.\n'
+                + 'Please login through the Discord web client first.\n'
+                + 'https://discordapp.com/login', fg='red', bold=True)
             self.login()
 
         # message actions
