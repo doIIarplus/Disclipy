@@ -97,7 +97,7 @@ class CLI(Observer):
             click.echo_via_pager(channels)
             click.echo('Select a channel by entering the corresponding #channel-name')
 
-            completer = WordCompleter(['#' + t.name for t in text_channels])
+            completer = WordCompleter(['#' + t.name for t in text_channels], ignore_case=True, sentence=True)
 
             selection = prompt('>',
                                validator=JoinableChannelListValidator(text_channels),
