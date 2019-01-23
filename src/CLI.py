@@ -127,6 +127,12 @@ class CLI(Observer):
                     msg, str(CMD.HELP)
                 ))
 
+    def __get_embed_text(self, embed_attr):
+        try:
+            return escape(embed_attr)
+        except AttributeError:
+            return ''
+
     def update(self, action: str, data=None):
         """Prints information passed by DiscordClient
         """
@@ -166,12 +172,45 @@ class CLI(Observer):
                     for att in msg.attachments:
                         message += '\n' + att.proxy_url
 
-                    # for embed in msg.embeds:
-                    # TODO
+                    embeds = '\n' if msg.embeds else ''
+                    for embed in msg.embeds:
+                        #color_bar = '<_ bg="%s"> </_> ' % (str(embed.colour),)
+
+                        author = '<b>%s</b>' % (self.__get_embed_text(embed.author.name),)
+                        title = self.__get_embed_text(embed.title)
+                        description = self.__get_embed_text(embed.description)
+                        fields = '\n'.join(['<b>%s</b>\n%s' % (
+                            self.__get_embed_text(f.name),
+                            self.__get_embed_text(f.value)
+                        ) for f in embed.fields])
+                        video = self.__get_embed_text(embed.video.url)
+                        image = self.__get_embed_text(
+                            embed.image.proxy_url or embed.image.url or '')
+                        footer = self.__get_embed_text(embed.footer.text)
+
+                        text = []
+
+                        if author:
+                            text.append(author)
+                        if title:
+                            text.append(title)
+                        if description:
+                            text.append(description)
+                        if fields:
+                            text.append(fields)
+                        if video:
+                            text.append(video)
+                        if image:
+                            text.append(image)
+                        if footer:
+                            text.append(footer)
+
+                        embeds += '\n\n'.join(text)
 
                     print_formatted_text(HTML(
                         '<_ fg="%s">%s</_>> %s' % (
                             str(color),
-                            msg.author.display_name,
+                            escape(msg.author.display_name),
                             escape(message)
+                            + embeds
                         )))
