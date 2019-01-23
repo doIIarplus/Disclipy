@@ -32,6 +32,12 @@ venv\scripts\activate
 pip install -r requirements.txt
 ```
 
+### Run test
+
+```
+python3 -m unittest tests/the_module_to_test.py
+```
+
 ### Push changes
 
 Push all files with:
