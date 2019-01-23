@@ -6,7 +6,7 @@ class Command():
     def __init__(self, prefix, cmd_description, pattern=''):
         self.description = prefix + cmd_description
         if pattern:
-            self.pattern = re.compile(pattern)
+            self.pattern = re.compile(prefix + pattern)
         else:
             self.pattern = re.compile(self.description + '$')
 
@@ -24,7 +24,9 @@ class ChatCommands:
     PREFIX = '/'
     HELP = Command(PREFIX, 'help')
     LIST_GUILDS = Command(PREFIX, 'list_guilds')
+    JOIN_GUILD = Command(PREFIX, 'join_guild', 'join_guild (.*)$')
     LIST_CHANNELS = Command(PREFIX, 'list_channels')
+    JOIN_CHANNEL = Command(PREFIX, 'join_channel', 'join_channel #(.*)$')
 
     __commands = [
         LIST_GUILDS,

@@ -126,6 +126,14 @@ class CLI(Observer):
         if CMD.HELP.match(msg):
             cmds = CMD.get_command_list()
             CMD.print('Here is a list of commands:\n' + '\n'.join(cmds))
+        elif CMD.LIST_GUILDS.match(msg):
+            pass
+        elif CMD.JOIN_GUILD.match(msg):
+            pass
+        elif CMD.LIST_CHANNELS.match(msg):
+            pass
+        elif CMD.JOIN_CHANNEL.match(msg):
+            pass
         else:
             CMD.print(
                 '"%s" command not found. Get a list of commands with:\n%s' % (
