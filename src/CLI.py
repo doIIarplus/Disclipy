@@ -119,7 +119,8 @@ class CLI(Observer):
             click.echo('Logging in...')
         elif action == 'login_successful':
             click.clear()
-            click.secho('You are logged in.', fg='black', bg='white')
+            click.secho('You are logged in as %s.' %
+                        (self.client.user.name,), fg='black', bg='white')
             if self.client.session_token:
                 self.config.set_token(self.client.session_token)
             self.display_guilds()
