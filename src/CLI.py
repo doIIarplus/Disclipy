@@ -160,9 +160,18 @@ class CLI(Observer):
                 255, 255, 255) if msg.author.color == discord.Color.default() else msg.author.color
             if self.current_channel:
                 if self.current_channel.id == msg.channel.id and self.channel_open:
+                    message = msg.content
+
+                    # add image urls
+                    for att in msg.attachments:
+                        message += '\n' + att.proxy_url
+
+                    # for embed in msg.embeds:
+                    # TODO
+
                     print_formatted_text(HTML(
                         '<_ fg="%s">%s</_>> %s' % (
                             str(color),
                             msg.author.display_name,
-                            escape(msg.content)
+                            escape(message)
                         )))
