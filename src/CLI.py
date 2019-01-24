@@ -62,9 +62,9 @@ class CLI(Observer):
 
     def open_channel(self):
         click.clear()
-        self.channel_open = True
         self.client.emit('open_channel', self.current_channel)
         asyncio.ensure_future(self.channel_prompt())
+        self.channel_open = True
 
     def display_guilds(self):
         guilds = ''
@@ -102,7 +102,8 @@ class CLI(Observer):
 
             click.echo('Select a channel by entering the corresponding #channel-name')
 
-            completer = WordCompleter(['#' + t.name for t in text_channels], ignore_case=True, sentence=True)
+            completer = WordCompleter(
+                ['#' + t.name for t in text_channels], ignore_case=True, sentence=True)
 
             selection = prompt('>',
                                validator=JoinableChannelListValidator(text_channels),
@@ -125,7 +126,25 @@ class CLI(Observer):
                         await self.current_channel.send(msg)
                 else:
                     self.handleCommands(msg)
+
                 await self.channel_prompt()
+        else:
+            text_channels = self.current_guild.text_channels
+            completer = WordCompleter(
+                ['#' + t.name for t in text_channels], ignore_case=True, sentence=True)
+            selected_channel = await prompt('>',
+                                            async_=True,
+                                            completer=completer,
+                                            validator=JoinableChannelListValidator(text_channels))
+            selected_channel = selected_channel[1:]
+
+            for channel in text_channels:
+                if selected_channel == channel.name:
+                    self.current_channel = channel
+                    click.clear()
+                    self.client.emit('open_channel', self.current_channel)
+
+            await self.channel_prompt()
 
     def handleCommands(self, msg):
         if CMD.HELP.match(msg):
@@ -135,15 +154,15 @@ class CLI(Observer):
             self.display_guilds()
         elif CMD.JOIN_GUILD.match(msg):
             try:
-                #guild_n = CMD.JOIN_GUILD.match(msg).group(1)
-                #guild_n = int(guild_n)
-                #self.current_guild = self.client.guilds[guild_n]
-                # this does not work right now
-                # TODO:
-                #self.current_channel = None
-                # self.display_channels()
-                # self.select_channel()
-                pass
+                guild_n = CMD.JOIN_GUILD.match(msg).group(1)
+                guild_n = int(guild_n)
+                self.current_guild = self.client.guilds[guild_n]
+                # THIS VIOLATES DRY PRINCIPLES
+                # refactor some time
+                self.display_channels()
+                self.current_channel = None
+                print_formatted_text(
+                    'Select a channel by entering the corresponding #channel-name')
             except ValueError:
                 CMD.print(
                     '"%s" not found. Please select a guild by index. Find the desired guild index by using:\n%s' %
@@ -155,8 +174,30 @@ class CLI(Observer):
         elif CMD.LIST_CHANNELS.match(msg):
             self.display_channels()
         elif CMD.JOIN_CHANNEL.match(msg):
-            # CMD.JOIN_CHANNEL.match(msg).group(1)
-            pass
+            # THIS VIOLATES DRY PRINCIPLES
+            # refactor some time
+            selected_channel = CMD.JOIN_CHANNEL.match(msg).group(1)
+            text_channels = self.current_guild.text_channels
+
+            channel_exists = False
+
+            for channel in text_channels:
+                if selected_channel == channel.name:
+                    self.current_channel = channel
+                    channel_exists = True
+                    break
+
+            if channel_exists:
+                click.clear()
+                self.client.emit('open_channel', self.current_channel)
+            else:
+                print_formatted_text(
+                    HTML(
+                        '<b bg="#ffffff" fg="#000000">'
+                        + escape(
+                            '#'
+                            + selected_channel) +
+                        ' does not exist.</b>'))
         else:
             CMD.print(
                 '"%s" command not found. Get a list of commands with:\n%s' % (
@@ -214,7 +255,10 @@ class CLI(Observer):
                     for embed in msg.embeds:
                         #color_bar = '<_ bg="%s"> </_> ' % (str(embed.colour),)
 
-                        author = '<b>%s</b>' % (self.__get_embed_text(embed.author.name),)
+                        author = self.__get_embed_text(embed.author.name)
+                        if author:
+                            author = '<b>%s</b>' % (author,)
+
                         title = self.__get_embed_text(embed.title)
                         description = self.__get_embed_text(embed.description)
                         fields = '\n'.join(['<b>%s</b>\n%s' % (
@@ -228,6 +272,8 @@ class CLI(Observer):
 
                         text = []
 
+                        bar = '<b bg="#eeeeee" fg="#333333">' + ('=' * 32) + '</b>'
+                        text.append(bar)
                         if author:
                             text.append(author)
                         if title:
@@ -242,6 +288,7 @@ class CLI(Observer):
                             text.append(image)
                         if footer:
                             text.append(footer)
+                        text.append(bar + '\n\n')
 
                         embeds += '\n\n'.join(text)
 
