@@ -23,14 +23,14 @@ class Command():
 class ChatCommands:
     PREFIX = '/'
     HELP = Command(PREFIX, 'help')
-    LIST_GUILDS = Command(PREFIX, 'list_guilds')
-    JOIN_GUILD = Command(PREFIX, 'join_guild', r'join_guild \s*([0-9]+)\s*$')
+    LIST_SERVERS = Command(PREFIX, 'list_servers')
+    JOIN_SERVER = Command(PREFIX, 'join_server', r'join_server \s*([0-9]+)\s*$')
     LIST_CHANNELS = Command(PREFIX, 'list_channels')
     JOIN_CHANNEL = Command(PREFIX, 'join_channel', 'join_channel #(.*)$')
 
     __commands = [
-        LIST_GUILDS,
-        JOIN_GUILD,
+        LIST_SERVERS,
+        JOIN_SERVER,
         LIST_CHANNELS,
         JOIN_CHANNEL
     ]

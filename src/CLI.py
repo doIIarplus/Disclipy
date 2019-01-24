@@ -150,11 +150,11 @@ class CLI(Observer):
         if CMD.HELP.match(msg):
             cmds = CMD.get_command_list()
             CMD.print('Here is a list of commands:\n' + '\n'.join(cmds))
-        elif CMD.LIST_GUILDS.match(msg):
+        elif CMD.LIST_SERVERS.match(msg):
             self.display_guilds()
-        elif CMD.JOIN_GUILD.match(msg):
+        elif CMD.JOIN_SERVER.match(msg):
             try:
-                guild_n = CMD.JOIN_GUILD.match(msg).group(1)
+                guild_n = CMD.JOIN_SERVER.match(msg).group(1)
                 guild_n = int(guild_n)
                 self.current_guild = self.client.guilds[guild_n]
                 # THIS VIOLATES DRY PRINCIPLES
@@ -167,7 +167,7 @@ class CLI(Observer):
                 CMD.print(
                     '"%s" not found. Please select a guild by index. Find the desired guild index by using:\n%s' %
                     (guild_n, str(
-                        CMD.JOIN_GUILD)))
+                        CMD.JOIN_SERVER)))
             except IndexError:
                 CMD.print('Invalid guild index, must be in range 0-%s' %
                           (str(len(self.client.guilds),)))
