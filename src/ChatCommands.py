@@ -1,4 +1,5 @@
 from prompt_toolkit import print_formatted_text, HTML
+from xml.sax.saxutils import escape
 import re
 
 
@@ -23,10 +24,19 @@ class Command():
 class ChatCommands:
     PREFIX = '/'
     HELP = Command(PREFIX, 'help')
-    LIST_SERVERS = Command(PREFIX, 'list_servers')
-    JOIN_SERVER = Command(PREFIX, 'join_server', r'join_server \s*([0-9]+)\s*$')
-    LIST_CHANNELS = Command(PREFIX, 'list_channels')
-    JOIN_CHANNEL = Command(PREFIX, 'join_channel', 'join_channel #(.*)$')
+    LIST_SERVERS = Command(
+        PREFIX,
+        'list_servers - lists your joinable servers.',
+        'list_servers$')
+    JOIN_SERVER = Command(
+        PREFIX,
+        'join_server <server index>',
+        r'join_server \s*([0-9]+)\s*$')
+    LIST_CHANNELS = Command(
+        PREFIX,
+        'list_channels - lists the joinable channels in the current joined server.',
+        'list_channels$')
+    JOIN_CHANNEL = Command(PREFIX, 'join_channel #<server-name>', 'join_channel #(.*)$')
 
     __commands = [
         LIST_SERVERS,
@@ -43,6 +53,6 @@ class ChatCommands:
     def print(text):
         print_formatted_text(
             HTML('<_ fg="#000000" bg="#ffffff">%s</_>' % (
-                text
+                escape(text)
             ))
         )
