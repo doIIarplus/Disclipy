@@ -38,11 +38,14 @@ class ChatCommands:
         'list_channels$')
     JOIN_CHANNEL = Command(PREFIX, 'join_channel #<server-name>', 'join_channel #(.*)$')
 
+    SHOW_PINS = Command(PREFIX, 'show_pins - shows pinned messages', 'show_pins$')
+
     __commands = [
         LIST_SERVERS,
         JOIN_SERVER,
         LIST_CHANNELS,
-        JOIN_CHANNEL
+        JOIN_CHANNEL,
+        SHOW_PINS
     ]
 
     @staticmethod

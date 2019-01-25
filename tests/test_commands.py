@@ -12,6 +12,20 @@ class TestCommandMatching(unittest.TestCase):
         self.assertFalse(CMD.HELP.match('/he'))
         self.assertFalse(CMD.HELP.match('/hel'))
 
+    def test_show_pins(self):
+        self.assertTrue(CMD.SHOW_PINS.match('/show_pins'))
+        self.assertFalse(CMD.SHOW_PINS.match(' /show_pins'))
+        self.assertFalse(CMD.SHOW_PINS.match('/show_pins '))
+        self.assertFalse(CMD.SHOW_PINS.match('/'))
+        self.assertFalse(CMD.SHOW_PINS.match('/s'))
+        self.assertFalse(CMD.SHOW_PINS.match('/sh'))
+        self.assertFalse(CMD.SHOW_PINS.match('/sho'))
+        self.assertFalse(CMD.SHOW_PINS.match('/show'))
+        self.assertFalse(CMD.SHOW_PINS.match('/show_'))
+        self.assertFalse(CMD.SHOW_PINS.match('/show_p'))
+        self.assertFalse(CMD.SHOW_PINS.match('/show_pi'))
+        self.assertFalse(CMD.SHOW_PINS.match('/show_pin'))
+
     def test_list_servers(self):
         self.assertTrue(CMD.LIST_SERVERS.match('/list_servers'))
         self.assertFalse(CMD.LIST_SERVERS.match(' /list_servers'))

@@ -125,7 +125,7 @@ class CLI(Observer):
                     if msg:
                         await self.current_channel.send(msg)
                 else:
-                    self.handleCommands(msg)
+                    await self.handleCommands(msg)
 
                 await self.channel_prompt()
         else:
@@ -146,7 +146,7 @@ class CLI(Observer):
 
             await self.channel_prompt()
 
-    def handleCommands(self, msg):
+    async def handleCommands(self, msg):
         if CMD.HELP.match(msg):
             cmds = CMD.get_command_list()
             CMD.print('Here is a list of commands:\n' + '\n'.join(cmds))
@@ -198,6 +198,13 @@ class CLI(Observer):
                             '#'
                             + selected_channel) +
                         ' does not exist.</b>'))
+        elif CMD.SHOW_PINS.match(msg):
+            # TODO: enhancement to make pins
+            # appear more distinct compared to
+            # messages
+            pins = await self.current_channel.pins()
+            for message in pins[::-1]:
+                self.client.emit('message', message)
         else:
             CMD.print(
                 '"%s" command not found. Get a list of commands with:\n%s' % (
