@@ -115,7 +115,10 @@ class CLI(Observer):
         if self.current_channel:
             use_asyncio_event_loop()
 
-            guild_emojis = [str(e) for e in self.current_guild.emojis]
+            if self.client.user.premium:
+                guild_emojis = [str(e) for e in self.client.emojis]
+            else:
+                guild_emojis = [str(e) for e in self.current_guild.emojis]
             channels = self.current_guild.text_channels
 
             with patch_stdout():
