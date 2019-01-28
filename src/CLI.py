@@ -17,15 +17,14 @@ import click
 
 import asyncio
 import discord
+import re
 
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
 
 from .Config import ConfigManager
-
 from .ChatCommands import ChatCommands as CMD
-
-from .DefaultEmojis import emojis
+from .CLICompleter import CLICompleter
 
 
 class CLI(Observer):
@@ -33,9 +32,6 @@ class CLI(Observer):
         Observer.__init__(self)
         self.client = DiscordClient(self)
         click.clear()
-
-        # TODO add completer for emojis
-        self.default_emojis = list(emojis)
 
         self.config = ConfigManager()
         self.current_guild = None
@@ -119,10 +115,19 @@ class CLI(Observer):
         if self.current_channel:
             use_asyncio_event_loop()
 
+            guild_emojis = [str(e) for e in self.current_guild.emojis]
+            channels = self.current_guild.text_channels
+
             with patch_stdout():
-                msg = await prompt('>', async_=True)
+                msg = await prompt('>', async_=True, completer=CLICompleter(guild_emojis, channels))
                 if not msg.startswith(CMD.PREFIX):
                     if msg:
+                        channel_names = re.findall(r'#(\S+)', msg)
+                        for msg_c in channel_names:
+                            for ch in channels:
+                                if msg_c == ch.name:
+                                    msg = re.sub('#' + msg_c, '<#%s>' %
+                                                 (str(ch.id),), msg)
                         await self.current_channel.send(msg)
                 else:
                     await self.handleCommands(msg)
@@ -193,10 +198,10 @@ class CLI(Observer):
             else:
                 print_formatted_text(
                     HTML(
-                        '<b bg="#ffffff" fg="#000000">'
-                        + escape(
-                            '#'
-                            + selected_channel) +
+                        '<b bg="#ffffff" fg="#000000">' +
+                        escape(
+                            '#' +
+                            selected_channel) +
                         ' does not exist.</b>'))
         elif CMD.SHOW_PINS.match(msg):
             # TODO: enhancement to make pins
@@ -239,9 +244,9 @@ class CLI(Observer):
             self.login()
         elif action == 'login_captcha_required':
             click.secho(
-                'Captcha required.\n'
-                + 'Please login through the Discord web client first.\n'
-                + 'https://discordapp.com/login', fg='red', bold=True)
+                'Captcha required.\n' +
+                'Please login through the Discord web client first.\n' +
+                'https://discordapp.com/login', fg='red', bold=True)
             self.login()
 
         # message actions
@@ -303,6 +308,6 @@ class CLI(Observer):
                         '<_ fg="%s">%s</_>> %s' % (
                             str(color),
                             escape(msg.author.display_name),
-                            escape(message)
-                            + embeds
+                            escape(message) +
+                            embeds
                         )))

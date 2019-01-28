@@ -49,8 +49,11 @@ class ChatCommands:
     ]
 
     @staticmethod
-    def get_command_list():
-        return [str(cmd) for cmd in ChatCommands.__commands]
+    def get_command_list(include_help=False):
+        cmd_list = [str(cmd) for cmd in ChatCommands.__commands]
+        if include_help:
+            cmd_list.insert(0, str(ChatCommands.HELP))
+        return cmd_list
 
     @staticmethod
     def print(text):
