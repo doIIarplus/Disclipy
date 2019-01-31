@@ -4,6 +4,7 @@ from .Config import *
 from getpass import getpass
 
 from prompt_toolkit import prompt, print_formatted_text, HTML
+from prompt_toolkit.shortcuts import clear
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.styles import Style
 from prompt_toolkit.styles.pygments import style_from_pygments_cls
@@ -253,6 +254,10 @@ class CLI(Observer):
             self.login()
 
         # message actions
+        elif action == 'message_edit':
+            if self.current_channel and data.channel.id == self.current_channel.id:
+                clear()
+                self.client.emit('open_channel', self.current_channel)
         elif action == 'message':
             msg = data
             color = discord.Color.from_rgb(
@@ -307,10 +312,13 @@ class CLI(Observer):
 
                         embeds += '\n\n'.join(text)
 
+                    edited = '<i fg="#888888"> (edited)</i>' if msg.edited_at else ''
+
                     print_formatted_text(HTML(
                         '<_ fg="%s">%s</_>> %s' % (
                             str(color),
                             escape(msg.author.display_name),
                             escape(message) +
-                            embeds
+                            embeds +
+                            edited
                         )))

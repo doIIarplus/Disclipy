@@ -20,6 +20,9 @@ class DiscordClient(discord.Client, Subject):
     async def on_message(self, message):
         self.notify('message', message)
 
+    async def on_message_edit(self, before, after):
+        self.notify('message_edit', after)
+
     async def on_open_channel(self, channel):
         async for message in channel.history(limit=10, reverse=True):
             self.notify('message', message)
