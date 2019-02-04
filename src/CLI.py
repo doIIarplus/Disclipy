@@ -314,16 +314,17 @@ class CLI(Observer):
 
                     edited = '<i fg="#888888"> (edited)</i>' if msg.edited_at else ''
 
+                    # apply highlighted background for @'d messages
                     if re.findall(
                             '@here(?![a-zA-Z])|@everyone(?![a-zA-Z])|<@!?' + str(self.client.user.id) + '>', message):
                         message = '<_ bg="#ff7900">' + escape(message) + '</_>'
                     else:
                         message = escape(message)
 
+                    # convert <@!user_id> to a readable format - @user_display_name
                     for tagged_user in re.findall(r'(&lt;@!?(\d+)&gt;)', message):
                         replace, user = tagged_user
                         user = self.client.get_user(int(user))
-
                         if user:
                             message = re.sub(replace, '@' + user.display_name, message)
 
