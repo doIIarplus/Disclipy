@@ -326,8 +326,7 @@ class CLI(Observer):
                     edited = '<i fg="#888888"> (edited)</i>' if msg.edited_at else ''
 
                     # apply highlighted background for @'d messages
-                    if re.findall(
-                            '@here(?![a-zA-Z])|@everyone(?![a-zA-Z])|<@!?' + str(self.client.user.id) + '>', message):
+                    if msg.mention_everyone or self.client.user in msg.mentions:
                         message = '<_ bg="#ff7900">' + escape(message) + '</_>'
                     else:
                         message = escape(message)
