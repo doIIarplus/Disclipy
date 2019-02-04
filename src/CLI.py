@@ -85,7 +85,8 @@ class CLI(Observer):
             text_channels = self.current_guild.text_channels
 
             for channel in text_channels:
-                channels += '#' + channel.name + '\n'
+                if self.client.user in channel.members:
+                    channels += '#' + channel.name + '\n'
 
             click.echo_via_pager(channels)
 
