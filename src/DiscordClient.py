@@ -2,6 +2,7 @@ from .observer import Subject
 import http.client
 import json
 import discord
+import re
 
 
 class DiscordClient(discord.Client, Subject):
@@ -19,6 +20,8 @@ class DiscordClient(discord.Client, Subject):
 
     async def on_message(self, message):
         self.notify('message', message)
+        if self.user in message.mentions:
+            self.notify('pinged', message)
 
     async def on_message_edit(self, before, after):
         self.notify('message_edit', after)

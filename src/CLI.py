@@ -258,6 +258,17 @@ class CLI(Observer):
             if self.current_channel and data.channel.id == self.current_channel.id:
                 clear()
                 self.client.emit('open_channel', self.current_channel)
+        elif action == 'pinged':
+            if self.current_channel.id != data.channel.id:
+                print_formatted_text(
+                    HTML(
+                        '<_ bg="#ff7900">'
+                        + escape(
+                            '@%s has mentioned you in: %s | #%s' %
+                            (data.author.display_name,
+                             data.guild.name,
+                             data.channel.name)) +
+                        '</_>'))
         elif action == 'message':
             msg = data
             color = discord.Color.from_rgb(
