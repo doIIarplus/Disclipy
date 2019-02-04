@@ -5,11 +5,8 @@ from prompt_toolkit import prompt, print_formatted_text, HTML
 from prompt_toolkit.shortcuts import clear
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.styles import Style
-from prompt_toolkit.styles.pygments import style_from_pygments_cls
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from prompt_toolkit.patch_stdout import patch_stdout
-
-from pygments.styles import get_style_by_name
 
 from .Validators import (
     JoinableGuildListValidator,
@@ -17,10 +14,10 @@ from .Validators import (
 )
 from .CLICompleter import CLICompleter
 
+from discord import Color
 from xml.sax.saxutils import escape
 import click
 import asyncio
-import discord
 import re
 
 from .Config import ConfigManager
@@ -270,8 +267,8 @@ class CLI(Observer):
                         '</_>'))
         elif action == 'message':
             msg = data
-            color = discord.Color.from_rgb(
-                255, 255, 255) if msg.author.color == discord.Color.default() else msg.author.color
+            color = Color.from_rgb(
+                255, 255, 255) if msg.author.color == Color.default() else msg.author.color
             if self.current_channel:
                 if self.current_channel.id == msg.channel.id and self.channel_open:
                     message = msg.clean_content
