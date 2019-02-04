@@ -314,11 +314,17 @@ class CLI(Observer):
 
                     edited = '<i fg="#888888"> (edited)</i>' if msg.edited_at else ''
 
+                    if re.findall(
+                            '@here(?![a-zA-Z])|@everyone(?![a-zA-Z])|<@!?' + str(self.client.user.id) + '>', message):
+                        message = '<_ bg="#ff7900">' + escape(message) + '</_>'
+                    else:
+                        message = escape(message)
+
                     print_formatted_text(HTML(
                         '<_ fg="%s">%s</_>> %s' % (
                             str(color),
                             escape(msg.author.display_name),
-                            escape(message) +
+                            message +
                             embeds +
                             edited
                         )))
