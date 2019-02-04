@@ -320,6 +320,13 @@ class CLI(Observer):
                     else:
                         message = escape(message)
 
+                    for tagged_user in re.findall(r'(&lt;@!?(\d+)&gt;)', message):
+                        replace, user = tagged_user
+                        user = self.client.get_user(int(user))
+
+                        if user:
+                            message = re.sub(replace, '@' + user.display_name, message)
+
                     print_formatted_text(HTML(
                         '<_ fg="%s">%s</_>> %s' % (
                             str(color),
