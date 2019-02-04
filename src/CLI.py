@@ -275,7 +275,7 @@ class CLI(Observer):
                 255, 255, 255) if msg.author.color == discord.Color.default() else msg.author.color
             if self.current_channel:
                 if self.current_channel.id == msg.channel.id and self.channel_open:
-                    message = msg.content
+                    message = msg.clean_content
 
                     # add image urls
                     for att in msg.attachments:
@@ -330,13 +330,6 @@ class CLI(Observer):
                         message = '<_ bg="#ff7900">' + escape(message) + '</_>'
                     else:
                         message = escape(message)
-
-                    # convert <@!user_id> to a readable format - @user_display_name
-                    for tagged_user in re.findall(r'(&lt;@!?(\d+)&gt;)', message):
-                        replace, user = tagged_user
-                        user = self.client.get_user(int(user))
-                        if user:
-                            message = re.sub(replace, '@' + user.display_name, message)
 
                     print_formatted_text(HTML(
                         '<_ fg="%s">%s</_>> %s' % (
