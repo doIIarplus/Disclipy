@@ -121,7 +121,7 @@ class CLI(Observer):
             with patch_stdout():
                 msg = await prompt('>', async_=True, completer=CLICompleter(guild_emojis, channels))
                 if not msg.startswith(CMD.PREFIX):
-                    if msg:
+                    if not re.match(r'^\s*$', msg):
                         channel_names = re.findall(r'#(\S+)', msg)
                         for msg_c in channel_names:
                             for ch in channels:
@@ -198,10 +198,10 @@ class CLI(Observer):
             else:
                 print_formatted_text(
                     HTML(
-                        '<b bg="#ffffff" fg="#000000">' +
-                        escape(
-                            '#' +
-                            selected_channel) +
+                        '<b bg="#ffffff" fg="#000000">'
+                        + escape(
+                            '#'
+                            + selected_channel) +
                         ' does not exist.</b>'))
         elif CMD.SHOW_PINS.match(msg):
             # TODO: enhancement to make pins
@@ -244,9 +244,9 @@ class CLI(Observer):
             self.login()
         elif action == 'login_captcha_required':
             click.secho(
-                'Captcha required.\n' +
-                'Please login through the Discord web client first.\n' +
-                'https://discordapp.com/login', fg='red', bold=True)
+                'Captcha required.\n'
+                + 'Please login through the Discord web client first.\n'
+                + 'https://discordapp.com/login', fg='red', bold=True)
             self.login()
 
         # message actions
@@ -258,8 +258,8 @@ class CLI(Observer):
             if self.current_channel.id != data.channel.id:
                 print_formatted_text(
                     HTML(
-                        '<_ bg="#ff7900">'
-                        + escape(
+                        '<_ bg="#ff7900">' +
+                        escape(
                             '@%s has mentioned you in: %s | #%s' %
                             (data.author.display_name,
                              data.guild.name,
@@ -331,7 +331,7 @@ class CLI(Observer):
                         '<_ fg="%s">%s</_>> %s' % (
                             str(color),
                             escape(msg.author.display_name),
-                            message +
-                            embeds +
-                            edited
+                            message
+                            + embeds
+                            + edited
                         )))
