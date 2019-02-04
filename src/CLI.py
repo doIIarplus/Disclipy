@@ -14,7 +14,7 @@ from .Validators import (
 )
 from .CLICompleter import CLICompleter
 
-from discord import Color
+from discord import Color, errors
 from xml.sax.saxutils import escape
 import click
 import asyncio
@@ -129,7 +129,11 @@ class CLI(Observer):
                                 if msg_c == ch.name:
                                     msg = re.sub('#' + msg_c, '<#%s>' %
                                                  (str(ch.id),), msg)
-                        await self.current_channel.send(msg)
+                        try:
+                            await self.current_channel.send(msg)
+                        except errors.Forbidden:
+                            print_formatted_text(
+                                HTML('<_ fg="#ff0000">You do not have permission to send messages in  this channel.</_>'))
                 else:
                     await self.handleCommands(msg)
 
