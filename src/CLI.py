@@ -1,31 +1,30 @@
 from .DiscordClient import DiscordClient
 from .observer import Observer
-from .Config import *
-from getpass import getpass
 
 from prompt_toolkit import prompt, print_formatted_text, HTML
 from prompt_toolkit.shortcuts import clear
 from prompt_toolkit.completion import WordCompleter
 from prompt_toolkit.styles import Style
 from prompt_toolkit.styles.pygments import style_from_pygments_cls
+from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
+from prompt_toolkit.patch_stdout import patch_stdout
+
 from pygments.styles import get_style_by_name
+
 from .Validators import (
     JoinableGuildListValidator,
     JoinableChannelListValidator
 )
+from .CLICompleter import CLICompleter
+
 from xml.sax.saxutils import escape
 import click
-
 import asyncio
 import discord
 import re
 
-from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
-from prompt_toolkit.patch_stdout import patch_stdout
-
 from .Config import ConfigManager
 from .ChatCommands import ChatCommands as CMD
-from .CLICompleter import CLICompleter
 
 
 class CLI(Observer):
