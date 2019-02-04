@@ -220,7 +220,7 @@ class CLI(Observer):
                     msg, str(CMD.HELP)
                 ))
 
-    def __get_embed_text(self, embed_attr):
+    def __escape_embed_text(self, embed_attr):
         try:
             return escape(embed_attr)
         except AttributeError:
@@ -286,20 +286,20 @@ class CLI(Observer):
                     for embed in msg.embeds:
                         #color_bar = '<_ bg="%s"> </_> ' % (str(embed.colour),)
 
-                        author = self.__get_embed_text(embed.author.name)
+                        author = self.__escape_embed_text(embed.author.name)
                         if author:
                             author = '<b>%s</b>' % (author,)
 
-                        title = self.__get_embed_text(embed.title)
-                        description = self.__get_embed_text(embed.description)
+                        title = self.__escape_embed_text(embed.title)
+                        description = self.__escape_embed_text(embed.description)
                         fields = '\n'.join(['<b>%s</b>\n%s' % (
-                            self.__get_embed_text(f.name),
-                            self.__get_embed_text(f.value)
+                            self.__escape_embed_text(f.name),
+                            self.__escape_embed_text(f.value)
                         ) for f in embed.fields])
-                        video = self.__get_embed_text(embed.video.url)
-                        image = self.__get_embed_text(
+                        video = self.__escape_embed_text(embed.video.url)
+                        image = self.__escape_embed_text(
                             embed.image.proxy_url or embed.image.url or '')
-                        footer = self.__get_embed_text(embed.footer.text)
+                        footer = self.__escape_embed_text(embed.footer.text)
 
                         text = []
 
