@@ -24,11 +24,6 @@ class CLICompleter(Completer):
             for c in cmds:
                 if text in c:
                     yield Completion(c, -len(text))
-        elif tag_re:
-            for g in self.guild.members:
-                tag = tag_re[-1]
-                if tag in g.display_name.lower():
-                    yield Completion(g.display_name, -len(tag))
         elif emoji_re:
             emoji = emoji_re[0]
             for e in self.default_emojis + self.guild_emojis:
@@ -40,3 +35,8 @@ class CLICompleter(Completer):
                 channel = channel_re[0]
                 if channel.lower() in channel_name.lower():
                     yield Completion(channel_name, -len(channel) - 1)
+        elif tag_re:
+            for g in self.guild.members:
+                tag = tag_re[-1]
+                if tag in g.display_name.lower():
+                    yield Completion(g.display_name, -len(tag))
