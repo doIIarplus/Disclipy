@@ -117,10 +117,9 @@ class CLI(Observer):
                 guild_emojis = [str(e) for e in self.client.emojis]
             else:
                 guild_emojis = [str(e) for e in self.current_guild.emojis]
-            channels = self.current_guild.text_channels
 
             with patch_stdout():
-                msg = await prompt('>', async_=True, completer=CLICompleter(guild_emojis, channels))
+                msg = await prompt('>', async_=True, completer=CLICompleter(guild_emojis, self.current_guild))
                 if not msg.startswith(CMD.PREFIX):
                     if not re.match(r'^\s*$', msg):
                         channel_names = re.findall(r'#(\S+)', msg)
@@ -130,6 +129,13 @@ class CLI(Observer):
                                     msg = re.sub('#' + msg_c, '<#%s>' %
                                                  (str(ch.id),), msg)
                         try:
+                            # convert @name to <@id>
+                            names = [n.strip() for n in re.findall(r'@([^@]{2,32})', msg)]
+                            members = self.current_guild.members
+                            for m in members:
+                                if m.display_name in names:
+                                    msg = re.sub('@' + m.display_name,
+                                                 '<@' + str(m.id) + '>', msg)
                             await self.current_channel.send(msg)
                         except errors.Forbidden:
                             print_formatted_text(
@@ -203,10 +209,10 @@ class CLI(Observer):
             else:
                 print_formatted_text(
                     HTML(
-                        '<b bg="#ffffff" fg="#000000">'
-                        + escape(
-                            '#'
-                            + selected_channel) +
+                        '<b bg="#ffffff" fg="#000000">' +
+                        escape(
+                            '#' +
+                            selected_channel) +
                         ' does not exist.</b>'))
         elif CMD.SHOW_PINS.match(msg):
             # TODO: enhancement to make pins
@@ -249,9 +255,9 @@ class CLI(Observer):
             self.login()
         elif action == 'login_captcha_required':
             click.secho(
-                'Captcha required.\n'
-                + 'Please login through the Discord web client first.\n'
-                + 'https://discordapp.com/login', fg='red', bold=True)
+                'Captcha required.\n' +
+                'Please login through the Discord web client first.\n' +
+                'https://discordapp.com/login', fg='red', bold=True)
             self.login()
 
         # message actions
@@ -263,8 +269,8 @@ class CLI(Observer):
             if self.current_channel.id != data.channel.id:
                 print_formatted_text(
                     HTML(
-                        '<_ bg="#ff7900">' +
-                        escape(
+                        '<_ bg="#ff7900">'
+                        + escape(
                             '@%s has mentioned you in: %s | #%s' %
                             (data.author.display_name,
                              data.guild.name,
@@ -336,7 +342,7 @@ class CLI(Observer):
                         '<_ fg="%s">%s</_>> %s' % (
                             str(color),
                             escape(msg.author.display_name),
-                            message
-                            + embeds
-                            + edited
+                            message +
+                            embeds +
+                            edited
                         )))
