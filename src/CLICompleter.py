@@ -38,5 +38,9 @@ class CLICompleter(Completer):
         elif tag_re:
             for g in self.guild.members:
                 tag = tag_re[-1]
-                if tag in g.display_name.lower():
-                    yield Completion(g.display_name, -len(tag))
+                names = [g.name.lower()]
+                if g.nick:
+                    names.append(g.nick.lower())
+                for name in names:
+                    if tag in name:
+                        yield Completion(g.display_name, -len(tag))
