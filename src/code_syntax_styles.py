@@ -702,6 +702,7 @@ end''', lang='ruby').hilite(),
     code_snippets = [HTML_2_prompt_toolkit_HTML(c) for c in code_snippets]
     for c in code_snippets:
         print_formatted_text(HTML(c), style=codehilite_style)
+        print(c)
     class_names = ''
 
     for cl in dict(codehilite_style.style_rules):
