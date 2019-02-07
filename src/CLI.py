@@ -281,7 +281,9 @@ class CLI(Observer):
             color = Color.from_rgb(
                 255, 255, 255) if msg.author.color == Color.default() else msg.author.color
             if self.current_channel:
-                if self.current_channel.id == msg.channel.id and self.channel_open:
+                if msg.author.is_blocked():
+                    print_formatted_text(HTML('<_>Blocked message.</_>'))
+                elif self.current_channel.id == msg.channel.id and self.channel_open:
                     message = msg.clean_content
 
                     # add image urls
