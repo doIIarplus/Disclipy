@@ -123,7 +123,7 @@ codehilite_style = Style.from_dict({
     "mh": '#666666',  # Literal.Number.Hex
     "mi": '#666666',  # Literal.Number.Integer
     "mo": '#666666',  # Literal.Number.Oct
-    "il": '#666666'  # Literal.Number.Integer.Long
+    "il": '#666666',  # Literal.Number.Integer.Long
     "sa": '#BA2121',  # Literal.String.Affix
     "sb": '#BA2121',  # Literal.String.Backtick
     "sc": '#BA2121',  # Literal.String.Char
@@ -144,7 +144,7 @@ codehilite_style = Style.from_dict({
     "hll": 'bg:#ffffcc',
     "err": 'bg:#FF0000',  # Error
     "gs": 'bold',  # Generic.Strong
-    "ge": 'italic',  # Generic.Emph
+    "ge": 'italic'  # Generic.Emph
 })
 
 
