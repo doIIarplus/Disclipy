@@ -123,8 +123,9 @@ class CLI(Observer):
                 if not msg.startswith(CMD.PREFIX):
                     if not re.match(r'^\s*$', msg):
                         channel_names = re.findall(r'#(\S+)', msg)
+                        # convert #channel-name to <#channel_id>
                         for msg_c in channel_names:
-                            for ch in channels:
+                            for ch in self.current_guild.channels:
                                 if msg_c == ch.name:
                                     msg = re.sub('#' + msg_c, '<#%s>' %
                                                  (str(ch.id),), msg)
@@ -236,7 +237,7 @@ class CLI(Observer):
     def __print_message(self, msg):
         color = Color.from_rgb(
             255, 255, 255) if msg.author.color == Color.default() else msg.author.color
-        message = msg.clean_content
+        message = escape(msg.clean_content)
 
         # add image urls
         for att in msg.attachments:
@@ -288,9 +289,7 @@ class CLI(Observer):
 
         # apply highlighted background for @'d messages
         if msg.mention_everyone or self.client.user in msg.mentions:
-            message = '<_ bg="#ff7900">' + escape(message) + '</_>'
-        else:
-            message = escape(message)
+            message = '<_ bg="#ff7900">' + message + '</_>'
 
         print_formatted_text(HTML(
             '<_ fg="%s">%s</_>> %s' % (
