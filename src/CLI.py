@@ -13,9 +13,9 @@ from .Validators import (
     JoinableChannelListValidator
 )
 from .CLICompleter import CLICompleter
-
 from discord import Color, errors
-from xml.sax.saxutils import escape
+from markdown.extensions.codehilite import CodeHilite
+from xml.sax.saxutils import escape, unescape
 import click
 import asyncio
 import re
@@ -234,10 +234,44 @@ class CLI(Observer):
         except AttributeError:
             return ''
 
+    def __get_styled_code_block(self, code_block: str):
+        """code_block is either:
+        1
+        ```some code```
+
+        2
+        ```language
+        code block
+        ```
+        """
+        code_block = unescape(code_block)
+        lang = None
+        if len(code_block.split('\n')) > 2:
+            code_block = code_block.strip('```')
+            lines = code_block.split('\n')
+            lang = lines[0]
+            code_block = '\n'.join(lines[1:])
+
+        html = CodeHilite(code_block, lang=lang, noclasses=True).hilite()
+        styles = re.findall('style=".*?"', html)
+
+        for s in styles:
+            fg = re.findall('(color: #[0-9a-fA-F]{6})', s)
+            if fg:
+                fg = re.sub(': ', '="', fg[0]) + '"'
+                html = re.sub(s, fg, html)
+        return '\n' + html
+
     def __print_message(self, msg):
         color = Color.from_rgb(
             255, 255, 255) if msg.author.color == Color.default() else msg.author.color
         message = escape(msg.clean_content)
+
+        # apply style to ```code blocks```
+        code_blocks = re.findall(r'(```[\S\s]*?```)', message)
+        for code_block in code_blocks:
+            message = message.replace(
+                code_block, self.__get_styled_code_block(code_block))
 
         # add image urls
         for att in msg.attachments:

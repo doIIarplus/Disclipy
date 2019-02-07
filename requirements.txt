@@ -8,6 +8,7 @@ colorama==0.4.1
 git+git://github.com/Rapptz/discord.py@7f4c57dd5ad20b7fa10aea485f674a4bc24b9547
 fuzzyfinder==2.1.0
 idna==2.8
+Markdown==3.0.1
 multidict==4.5.2
 prompt-toolkit==2.0.7
 pycodestyle==2.4.0
