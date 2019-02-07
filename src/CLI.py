@@ -233,6 +233,74 @@ class CLI(Observer):
         except AttributeError:
             return ''
 
+    def __print_message(self, msg):
+        color = Color.from_rgb(
+            255, 255, 255) if msg.author.color == Color.default() else msg.author.color
+        message = msg.clean_content
+
+        # add image urls
+        for att in msg.attachments:
+            message += '\n' + att.proxy_url
+
+        # add embed display
+        embeds = '\n' if msg.embeds else ''
+        for embed in msg.embeds:
+            #color_bar = '<_ bg="%s"> </_> ' % (str(embed.colour),)
+
+            author = self.__escape_embed_text(embed.author.name)
+            if author:
+                author = '<b>%s</b>' % (author,)
+
+            title = self.__escape_embed_text(embed.title)
+            description = self.__escape_embed_text(embed.description)
+            fields = '\n'.join(['<b>%s</b>\n%s' % (
+                self.__escape_embed_text(f.name),
+                self.__escape_embed_text(f.value)
+            ) for f in embed.fields])
+            video = self.__escape_embed_text(embed.video.url)
+            image = self.__escape_embed_text(
+                embed.image.proxy_url or embed.image.url or '')
+            footer = self.__escape_embed_text(embed.footer.text)
+
+            text = []
+
+            bar = '<b bg="#eeeeee" fg="#333333">' + ('=' * 32) + '</b>'
+            text.append(bar)
+            if author:
+                text.append(author)
+            if title:
+                text.append(title)
+            if description:
+                text.append(description)
+            if fields:
+                text.append(fields)
+            if video:
+                text.append(video)
+            if image:
+                text.append(image)
+            if footer:
+                text.append(footer)
+            text.append(bar + '\n\n')
+
+            embeds += '\n\n'.join(text)
+
+        edited = '<i fg="#888888"> (edited)</i>' if msg.edited_at else ''
+
+        # apply highlighted background for @'d messages
+        if msg.mention_everyone or self.client.user in msg.mentions:
+            message = '<_ bg="#ff7900">' + escape(message) + '</_>'
+        else:
+            message = escape(message)
+
+        print_formatted_text(HTML(
+            '<_ fg="%s">%s</_>> %s' % (
+                str(color),
+                escape(msg.author.display_name),
+                message +
+                embeds +
+                edited
+            )))
+
     def update(self, action: str, data=None):
         """Prints information passed by DiscordClient
         """
@@ -278,73 +346,8 @@ class CLI(Observer):
                         '</_>'))
         elif action == 'message':
             msg = data
-            color = Color.from_rgb(
-                255, 255, 255) if msg.author.color == Color.default() else msg.author.color
             if self.current_channel:
                 if msg.author.is_blocked():
                     print_formatted_text(HTML('<_>Blocked message.</_>'))
                 elif self.current_channel.id == msg.channel.id and self.channel_open:
-                    message = msg.clean_content
-
-                    # add image urls
-                    for att in msg.attachments:
-                        message += '\n' + att.proxy_url
-
-                    # add embed display
-                    embeds = '\n' if msg.embeds else ''
-                    for embed in msg.embeds:
-                        #color_bar = '<_ bg="%s"> </_> ' % (str(embed.colour),)
-
-                        author = self.__escape_embed_text(embed.author.name)
-                        if author:
-                            author = '<b>%s</b>' % (author,)
-
-                        title = self.__escape_embed_text(embed.title)
-                        description = self.__escape_embed_text(embed.description)
-                        fields = '\n'.join(['<b>%s</b>\n%s' % (
-                            self.__escape_embed_text(f.name),
-                            self.__escape_embed_text(f.value)
-                        ) for f in embed.fields])
-                        video = self.__escape_embed_text(embed.video.url)
-                        image = self.__escape_embed_text(
-                            embed.image.proxy_url or embed.image.url or '')
-                        footer = self.__escape_embed_text(embed.footer.text)
-
-                        text = []
-
-                        bar = '<b bg="#eeeeee" fg="#333333">' + ('=' * 32) + '</b>'
-                        text.append(bar)
-                        if author:
-                            text.append(author)
-                        if title:
-                            text.append(title)
-                        if description:
-                            text.append(description)
-                        if fields:
-                            text.append(fields)
-                        if video:
-                            text.append(video)
-                        if image:
-                            text.append(image)
-                        if footer:
-                            text.append(footer)
-                        text.append(bar + '\n\n')
-
-                        embeds += '\n\n'.join(text)
-
-                    edited = '<i fg="#888888"> (edited)</i>' if msg.edited_at else ''
-
-                    # apply highlighted background for @'d messages
-                    if msg.mention_everyone or self.client.user in msg.mentions:
-                        message = '<_ bg="#ff7900">' + escape(message) + '</_>'
-                    else:
-                        message = escape(message)
-
-                    print_formatted_text(HTML(
-                        '<_ fg="%s">%s</_>> %s' % (
-                            str(color),
-                            escape(msg.author.display_name),
-                            message +
-                            embeds +
-                            edited
-                        )))
+                    self.__print_message(msg)
