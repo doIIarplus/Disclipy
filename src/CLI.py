@@ -15,6 +15,7 @@ from .Validators import (
 from .CLICompleter import CLICompleter
 from discord import Color, errors
 from markdown.extensions.codehilite import CodeHilite
+from .code_syntax_styles import codehilite_style, HTML_2_prompt_toolkit_HTML
 from xml.sax.saxutils import escape, unescape
 import click
 import asyncio
@@ -252,15 +253,9 @@ class CLI(Observer):
             lang = lines[0]
             code_block = '\n'.join(lines[1:])
 
-        html = CodeHilite(code_block, lang=lang, noclasses=True).hilite()
-        styles = re.findall('style=".*?"', html)
+        html = CodeHilite(code_block, lang=lang).hilite()
 
-        for s in styles:
-            fg = re.findall('(color: #[0-9a-fA-F]{6})', s)
-            if fg:
-                fg = re.sub(': ', '="', fg[0]) + '"'
-                html = re.sub(s, fg, html)
-        return '\n' + html
+        return '\n' + HTML_2_prompt_toolkit_HTML(html)
 
     def __print_message(self, msg):
         color = Color.from_rgb(
@@ -332,7 +327,7 @@ class CLI(Observer):
                 message +
                 embeds +
                 edited
-            )))
+            )), style=codehilite_style)
 
     def update(self, action: str, data=None):
         """Prints information passed by DiscordClient
