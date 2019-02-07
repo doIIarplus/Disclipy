@@ -77,37 +77,35 @@ from xml.sax.saxutils import escape
 """
 
 codehilite_style = Style.from_dict({
-    "hll": 'bg: #ffffcc',
+    "gr": '#FF0000',  # Generic.Error
+    "cp": '#BC7A00',  # Comment.Preproc
     "c": '#408080 italic',  # Comment
-    "err": 'bg: #FF0000',  # Error
-    "k": '#008000 bold',  # Keyword
-    "o": '#666666',  # Operator
     "ch": '#408080 italic',  # Comment.Hashbang
     "cm": '#408080 italic',  # Comment.Multiline
-    "cp": '#BC7A00',  # Comment.Preproc
     "cpf": '#408080 italic',  # Comment.PreprocFile
     "c1": '#408080 italic',  # Comment.Single
     "cs": '#408080 italic',  # Comment.Special
     "gd": '#A00000',  # Generic.Deleted
-    "ge": 'italic',  # Generic.Emph
-    "gr": '#FF0000',  # Generic.Error
     "gh": '#000080 bold',  # Generic.Heading
+    "gp": '#000080 bold',  # Generic.Prompt
     "gi": '#00A000',  # Generic.Inserted
     "go": '#888888',  # Generic.Output
-    "gp": '#000080 bold',  # Generic.Prompt
-    "gs": 'bold',  # Generic.Strong
     "gu": '#800080 bold',  # Generic.Subheading
     "gt": '#0044DD',  # Generic.Traceback
-    "kc": '#008000 bold',  # Keyword.Constant
-    "kd": '#008000 bold',  # Keyword.Declaration
-    "kn": '#008000 bold',  # Keyword.Namespace
-    "kp": '#008000',  # Keyword.Pseudo
-    "kr": '#008000 bold',  # Keyword.Reserved
     "kt": '#B00040',  # Keyword.Type
     "m": '#666666',  # Literal.Number
     "s": '#BA2121',  # Literal.String
     "na": '#7D9029',  # Name.Attribute
+    "kp": '#008000',  # Keyword.Pseudo
     "nb": '#008000',  # Name.Builtin
+    "sx": '#008000',  # Literal.String.Other
+    "bp": '#008000',  # Name.Builtin.Pseudo
+    "k": '#008000 bold',  # Keyword
+    "kc": '#008000 bold',  # Keyword.Constant
+    "kd": '#008000 bold',  # Keyword.Declaration
+    "kn": '#008000 bold',  # Keyword.Namespace
+    "kr": '#008000 bold',  # Keyword.Reserved
+    "nt": '#008000 bold',  # Name.Tag
     "nc": '#0000FF bold',  # Name.Class
     "no": '#880000',  # Name.Constant
     "nd": '#AA22FF',  # Name.Decorator
@@ -116,35 +114,37 @@ codehilite_style = Style.from_dict({
     "nf": '#0000FF',  # Name.Function
     "nl": '#A0A000',  # Name.Label
     "nn": '#0000FF bold',  # Name.Namespace
-    "nt": '#008000 bold',  # Name.Tag
     "nv": '#19177C',  # Name.Variable
     "ow": '#AA22FF bold',  # Operator.Word
     "w": '#bbbbbb',  # Text.Whitespace
+    "o": '#666666',  # Operator
     "mb": '#666666',  # Literal.Number.Bin
     "mf": '#666666',  # Literal.Number.Float
     "mh": '#666666',  # Literal.Number.Hex
     "mi": '#666666',  # Literal.Number.Integer
     "mo": '#666666',  # Literal.Number.Oct
+    "il": '#666666'  # Literal.Number.Integer.Long
     "sa": '#BA2121',  # Literal.String.Affix
     "sb": '#BA2121',  # Literal.String.Backtick
     "sc": '#BA2121',  # Literal.String.Char
     "dl": '#BA2121',  # Literal.String.Delimiter
-    "sd": '#BA2121 italic',  # Literal.String.Doc
     "s2": '#BA2121',  # Literal.String.Double
+    "sd": '#BA2121 italic',  # Literal.String.Doc
     "se": '#BB6622 bold',  # Literal.String.Escape
     "sh": '#BA2121',  # Literal.String.Heredoc
     "si": '#BB6688 bold',  # Literal.String.Interpol
-    "sx": '#008000',  # Literal.String.Other
     "sr": '#BB6688',  # Literal.String.Regex
     "s1": '#BA2121',  # Literal.String.Single
-    "ss": '#19177C',  # Literal.String.Symbol
-    "bp": '#008000',  # Name.Builtin.Pseudo
     "fm": '#0000FF',  # Name.Function.Magic
+    "ss": '#19177C',  # Literal.String.Symbol
     "vc": '#19177C',  # Name.Variable.Class
     "vg": '#19177C',  # Name.Variable.Global
     "vi": '#19177C',  # Name.Variable.Instance
     "vm": '#19177C',  # Name.Variable.Magic
-    "il": '#666666'  # Literal.Number.Integer.Long
+    "hll": 'bg:#ffffcc',
+    "err": 'bg:#FF0000',  # Error
+    "gs": 'bold',  # Generic.Strong
+    "ge": 'italic',  # Generic.Emph
 })
 
 
