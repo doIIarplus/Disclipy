@@ -64,7 +64,7 @@ class DiscordClient(discord.Client, Subject):
         conn.request('POST', '/api/v6/auth/login', payload, headers)
 
         res = conn.getresponse()
-        data = json.loads(res.read())
+        data = json.loads(res.read().decode('utf-8'))
 
         ret = {
             'token': '',
