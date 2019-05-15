@@ -15,8 +15,12 @@ class DiscordClient(discord.Client, Subject):
         self.session_token = None
 
     async def on_ready(self):
-        self.notify('login_successful')
-        self.logged_in = True
+        try:
+            self.notify('login_successful')
+            self.logged_in = True
+        except:
+            # Do nothing
+            pass
 
     async def on_message(self, message):
         self.notify('message', message)

@@ -35,6 +35,7 @@ class CLI(Observer):
         self.current_guild = None
         self.current_channel = None
         self.channel_open = False
+        self.logged_in = False
 
     def login(self):
         if self.config.auto_login_enabled():
@@ -336,13 +337,15 @@ class CLI(Observer):
         if action == 'login_in_progress':
             click.echo('Logging in...')
         elif action == 'login_successful':
-            click.clear()
-            click.secho('You are logged in as %s.' %
+            if not self.logged_in:
+                self.logged_in = True
+                click.clear()
+                click.secho('You are logged in as %s.' %
                         (self.client.user.name,), fg='black', bg='white')
-            if self.client.session_token:
-                self.config.set_token(self.client.session_token)
-            self.display_guilds()
-            self.select_guild()
+                if self.client.session_token:
+                        self.config.set_token(self.client.session_token)
+                self.display_guilds()
+                self.select_guild()
         elif action == 'login_incorrect_email_format':
             click.secho('Not a well formed email address.', fg='red', bold=True)
             self.login()
