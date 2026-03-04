@@ -22,12 +22,13 @@ ____  _          _ _
 - **Unread notifications** — channels with unread messages are highlighted in the sidebar with a count
 - **Mention alerts** — get a notification panel when you're pinged in another channel
 - **Keyboard shortcuts** for fast channel navigation
-- **Token persistence** — your bot token is saved to `config.ini` so you only enter it once
+- **Bot and user token support** — log in with a bot token or your own Discord user token
+- **Token persistence** — your token and login method are saved to `config.ini` so you only enter them once
 
 ## Requirements
 
 - Python 3.8+
-- A Discord bot token ([create one here](https://discord.com/developers/applications))
+- A Discord bot token ([create one here](https://discord.com/developers/applications)), **or** a Discord user token
 
 ## Setup
 
@@ -45,7 +46,14 @@ pip install -r requirements.txt
 python3 Disclipy.py
 ```
 
-On first run you'll be prompted for your bot token. After that it's saved to `config.ini` and you'll be logged in automatically.
+On first run you'll be asked to choose a login method:
+
+- **Bot token** — create a bot at [discord.com/developers](https://discord.com/developers/applications), copy its token
+- **User token** — use your own Discord account token (find it in your browser DevTools under the `Authorization` network header)
+
+Your choice and token are saved to `config.ini` for subsequent runs. To switch login methods, delete `config.ini` and restart.
+
+> **Warning:** Using a user token (self-botting) violates Discord's Terms of Service and may result in your account being banned. Use at your own risk.
 
 ## Commands
 

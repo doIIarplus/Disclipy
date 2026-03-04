@@ -8,6 +8,7 @@ class Sections:
 
 class Keys:
     TOKEN = 'Token'
+    ACCOUNT_TYPE = 'AccountType'
 
 
 class ConfigManager:
@@ -18,6 +19,7 @@ class ConfigManager:
         if not os.path.isfile(self.filename):
             self.config[Sections.CREDENTIALS] = {
                 Keys.TOKEN: '',
+                Keys.ACCOUNT_TYPE: 'bot',
             }
             with open(self.filename, 'w') as file:
                 self.config.write(file)
@@ -34,6 +36,19 @@ class ConfigManager:
 
     def get_token(self):
         return self.config[Sections.CREDENTIALS][Keys.TOKEN]
+
+    def get_account_type(self):
+        try:
+            return self.config[Sections.CREDENTIALS][Keys.ACCOUNT_TYPE]
+        except KeyError:
+            return 'bot'
+
+    def set_account_type(self, account_type):
+        self.config[Sections.CREDENTIALS][Keys.ACCOUNT_TYPE] = account_type
+        self.save()
+
+    def is_bot(self):
+        return self.get_account_type() == 'bot'
 
     def save(self):
         with open(self.filename, 'w') as f:

@@ -46,7 +46,7 @@ SIDEBAR_WIDTH = 24
 class CLI(Observer):
     def __init__(self):
         Observer.__init__(self)
-        self.client = DiscordClient(self)
+        self.client = None
         self.console = Console()
         self._in_chat_mode = False
         self._completer = None
@@ -124,13 +124,40 @@ class CLI(Observer):
         if self.config.has_token():
             token = self.config.get_token()
         else:
-            self.console.print("[bold yellow]Enter your bot token to get started.[/]")
-            self.console.print(
-                "[dim]Create a bot at https://discord.com/developers/applications[/]"
-            )
+            self.console.print("[bold yellow]Select login method:[/]")
+            self.console.print("  [bold]1[/] Bot token")
+            self.console.print("  [bold]2[/] User token")
+            self.console.print()
+            choice = prompt("Choice (1/2): ").strip()
+
+            if choice == "2":
+                self.console.print()
+                self.console.print(
+                    "[bold red]Warning:[/] Using a user token (self-botting) "
+                    "violates Discord's Terms of Service and may result in "
+                    "your account being banned."
+                )
+                self.console.print()
+                self.config.set_account_type("user")
+                self.console.print(
+                    "[dim]Paste your user token below. "
+                    "You can find it in your browser's DevTools "
+                    "(Network tab → Authorization header).[/]"
+                )
+            else:
+                self.config.set_account_type("bot")
+                self.console.print()
+                self.console.print(
+                    "[dim]Create a bot at "
+                    "https://discord.com/developers/applications[/]"
+                )
+
             self.console.print()
             token = prompt("Token: ", is_password=True)
             self.config.set_token(token)
+
+        is_bot = self.config.is_bot()
+        self.client = DiscordClient(self, bot=is_bot)
 
         self.console.print("[dim]Connecting to Discord...[/]")
         self.client.run(token)
@@ -211,6 +238,8 @@ class CLI(Observer):
 
     async def _fetch_discord_commands(self):
         """Fetch Discord app commands for the current guild."""
+        if not self.client.tree:
+            return
         cmds = []
         try:
             global_cmds = await self.client.tree.fetch_commands()
