@@ -1,5 +1,6 @@
 from .observer import Subject
 import discord
+from discord.app_commands import CommandTree
 import asyncio
 
 
@@ -10,6 +11,7 @@ class DiscordClient(discord.Client, Subject):
         intents.members = True
         discord.Client.__init__(self, intents=intents)
         Subject.__init__(self)
+        self.tree = CommandTree(self)
 
         self.attach(cli)
         self.session_token = None

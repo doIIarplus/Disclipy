@@ -1,41 +1,46 @@
-from .DiscordClient import DiscordClient
-from .observer import Observer
-
-from prompt_toolkit import prompt, PromptSession, print_formatted_text
-from prompt_toolkit.completion import WordCompleter
-from prompt_toolkit.patch_stdout import patch_stdout
-from prompt_toolkit.formatted_text import ANSI, FormattedText
-
-from .Validators import (
-    JoinableGuildListValidator,
-    JoinableChannelListValidator
-)
-from .CLICompleter import CLICompleter
-from discord import Color, errors
-
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
-from rich.rule import Rule
-from rich.syntax import Syntax
-from rich import box
-
 import asyncio
 import re
+import shutil
 from io import StringIO
 
-from .Config import ConfigManager
+from discord import Color, errors
+from prompt_toolkit import prompt, PromptSession
+from prompt_toolkit.application import Application
+from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.completion import WordCompleter
+from prompt_toolkit.formatted_text import ANSI
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.layout import Layout, HSplit, VSplit, Window, FloatContainer, Float
+from prompt_toolkit.layout.controls import FormattedTextControl, BufferControl
+from prompt_toolkit.layout.dimension import Dimension
+from prompt_toolkit.layout.menus import CompletionsMenu
+from prompt_toolkit.layout.processors import BeforeInput
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.rule import Rule
+from rich.syntax import Syntax
+from rich.table import Table
+from rich.align import Align
+from rich.text import Text
+
 from .ChatCommands import ChatCommands as CMD
+from .CLICompleter import CLICompleter
+from .Config import ConfigManager
+from .DiscordClient import DiscordClient
+from .observer import Observer
+from .Validators import JoinableChannelListValidator, JoinableGuildListValidator
 
 
 BANNER = """
- ____  _          _ _
+____  _          _ _
 |  _ \\(_)___  ___| (_)_ __  _   _
 | | | | / __|/ __| | | '_ \\| | | |
 | |_| | \\__ \\ (__| | | |_) | |_| |
 |____/|_|___/\\___|_|_| .__/ \\__, |
                       |_|    |___/"""
+
+SIDEBAR_WIDTH = 24
 
 
 class CLI(Observer):
@@ -49,63 +54,82 @@ class CLI(Observer):
         self.config = ConfigManager()
         self.current_guild = None
         self.current_channel = None
+        self.previous_channel = None
         self.channel_open = False
         self.logged_in = False
 
-        self._unread_counts = {}   # {channel_id: int}
-        self._session = None       # PromptSession ref for toolbar invalidation
+        self._unread_counts = {}  # {channel_id: int}
+        self._chat_lines = []    # list of ANSI strings for chat display
+        self._app = None         # prompt_toolkit Application ref
+        self._discord_commands = []
 
     def _print(self, *args, **kwargs):
         if self._in_chat_mode:
             buf = StringIO()
-            tmp = Console(
-                file=buf, force_terminal=True,
-                width=self.console.width)
+            chat_width = shutil.get_terminal_size().columns - SIDEBAR_WIDTH - 1
+            tmp = Console(file=buf, force_terminal=True, width=max(40, chat_width))
             tmp.print(*args, **kwargs)
             text = buf.getvalue()
             if text.strip():
-                print_formatted_text(ANSI(text.rstrip('\n')))
+                self._chat_lines.append(text.rstrip("\n"))
+                if len(self._chat_lines) > 1000:
+                    self._chat_lines = self._chat_lines[-500:]
+                if self._app:
+                    self._app.invalidate()
         else:
             self.console.print(*args, **kwargs)
 
-    def _bottom_toolbar(self):
-        unread = {cid: count for cid, count in self._unread_counts.items()
-                  if count > 0}
-        if not unread or not self.current_guild:
-            return FormattedText([
-                ('bg:#1a1a2e #888888', ' No unread messages ')
-            ])
+    def _get_chat_text(self):
+        result = []
+        for line in self._chat_lines:
+            result.extend(ANSI(line).__pt_formatted_text__())
+            result.append(('', '\n'))
+        result.append(('[SetCursorPosition]', ''))
+        return result
 
-        parts = []
-        for channel in self.current_guild.text_channels:
-            count = unread.get(channel.id)
-            if count:
-                if parts:
-                    parts.append(('bg:#1a1a2e #888888', ' · '))
-                parts.append(('bg:#1a1a2e #ffcc00 bold',
-                              f' #{channel.name} ({count}) '))
-        return FormattedText(parts) if parts else FormattedText([
-            ('bg:#1a1a2e #888888', ' No unread messages ')
-        ])
+    def _get_sidebar_text(self):
+        result = []
+        if self.current_guild:
+            result.append(('bold', f' {self.current_guild.name}\n'))
+            result.append(('dim', ' ' + '─' * (SIDEBAR_WIDTH - 2) + '\n'))
+            for channel in self.current_guild.text_channels:
+                count = self._unread_counts.get(channel.id, 0)
+                if self.current_channel and channel.id == self.current_channel.id:
+                    name = f' ▸ #{channel.name}'
+                    result.append(('bold fg:ansigreen', name.ljust(SIDEBAR_WIDTH) + '\n'))
+                elif count > 0:
+                    name = f' * #{channel.name} ({count})'
+                    result.append(('bold fg:ansiyellow', name.ljust(SIDEBAR_WIDTH) + '\n'))
+                else:
+                    name = f'   #{channel.name}'
+                    result.append(('dim', name.ljust(SIDEBAR_WIDTH) + '\n'))
+        return result
+
+    def _get_prompt_text(self):
+        if self.current_channel:
+            return [('bold', f'#{self.current_channel.name} '), ('', '› ')]
+        return [('', '› ')]
 
     def start(self):
         self.console.clear()
-        self.console.print(Panel(
-            Text(BANNER, style="bold cyan", justify="center"),
-            subtitle="[dim]Discord in your terminal[/]",
-            border_style="cyan",
-        ))
+        self.console.print(
+            Panel(
+                Align.center(Text(BANNER, style="bold cyan")),
+                subtitle="[dim]Discord in your terminal[/]",
+                border_style="cyan",
+            )
+        )
         self.console.print()
 
         if self.config.has_token():
             token = self.config.get_token()
         else:
+            self.console.print("[bold yellow]Enter your bot token to get started.[/]")
             self.console.print(
-                "[bold yellow]Enter your bot token to get started.[/]")
-            self.console.print(
-                "[dim]Create a bot at https://discord.com/developers/applications[/]")
+                "[dim]Create a bot at https://discord.com/developers/applications[/]"
+            )
             self.console.print()
-            token = prompt('Token: ', is_password=True)
+            token = prompt("Token: ", is_password=True)
             self.config.set_token(token)
 
         self.console.print("[dim]Connecting to Discord...[/]")
@@ -133,12 +157,10 @@ class CLI(Observer):
         self._print("[bold]Select a server by entering its number:[/]")
         session = PromptSession()
         selection = await session.prompt_async(
-            '› ',
-            validator=JoinableGuildListValidator(len(self.client.guilds))
+            "› ", validator=JoinableGuildListValidator(len(self.client.guilds))
         )
         self.current_guild = self.client.guilds[int(selection)]
-        self._print(
-            f"[bold green]Connected to[/] [bold]{self.current_guild.name}[/]")
+        self._print(f"[bold green]Connected to[/] [bold]{self.current_guild.name}[/]")
 
     def display_channels(self):
         if not self.current_guild:
@@ -168,17 +190,16 @@ class CLI(Observer):
 
         text_channels = self.current_guild.text_channels
         self._print()
-        self._print(
-            "[bold]Select a channel by entering #channel-name:[/]")
+        self._print("[bold]Select a channel by entering #channel-name:[/]")
 
         completer = WordCompleter(
-            ['#' + t.name for t in text_channels],
+            ["#" + t.name for t in text_channels],
             ignore_case=True,
             sentence=True,
         )
         session = PromptSession()
         selection = await session.prompt_async(
-            '› ',
+            "› ",
             validator=JoinableChannelListValidator(text_channels),
             completer=completer,
         )
@@ -188,16 +209,36 @@ class CLI(Observer):
                 self.current_channel = channel
                 break
 
+    async def _fetch_discord_commands(self):
+        """Fetch Discord app commands for the current guild."""
+        cmds = []
+        try:
+            global_cmds = await self.client.tree.fetch_commands()
+            cmds.extend(global_cmds)
+            if self.current_guild:
+                guild_cmds = await self.client.tree.fetch_commands(guild=self.current_guild)
+                cmds.extend(guild_cmds)
+        except Exception:
+            pass  # bot may not have any registered commands
+        self._discord_commands = [
+            {"name": cmd.name, "description": cmd.description}
+            for cmd in cmds
+        ]
+
     async def open_channel(self):
-        self.console.clear()
-        self._print(Rule(
-            f"[bold]#{self.current_channel.name}[/] in "
-            f"[cyan]{self.current_guild.name}[/]",
-            style="green",
-        ))
+        self._chat_lines = []
+        self._in_chat_mode = True
+        self._print(
+            Rule(
+                f"[bold]#{self.current_channel.name}[/] in "
+                f"[cyan]{self.current_guild.name}[/]",
+                style="green",
+            )
+        )
         self._print()
         self._unread_counts[self.current_channel.id] = 0
-        self.client.emit('open_channel', self.current_channel)
+        await self._fetch_discord_commands()
+        self.client.emit("open_channel", self.current_channel)
         self.channel_open = True
         await self.channel_loop()
 
@@ -206,61 +247,151 @@ class CLI(Observer):
             return
 
         guild_emojis = [str(e) for e in self.current_guild.emojis]
-        self._completer = CLICompleter(guild_emojis, self.current_guild)
-        session = PromptSession(
-            completer=self._completer, erase_when_done=True,
-            bottom_toolbar=self._bottom_toolbar)
-        self._session = session
+        self._completer = CLICompleter(guild_emojis, self.current_guild, self._discord_commands)
 
-        with patch_stdout():
-            self._in_chat_mode = True
-            while True:
-                try:
-                    channel_name = (f'#{self.current_channel.name} '
-                                    if self.current_channel else '')
-                    msg = await session.prompt_async(f'{channel_name}› ')
-                except (EOFError, KeyboardInterrupt):
-                    self._in_chat_mode = False
-                    await self.client.close()
+        kb = KeyBindings()
+
+        @kb.add("escape", "left")
+        def _alt_left(event):
+            if self.previous_channel:
+                event.current_buffer.text = (
+                    f"/join_channel #{self.previous_channel.name}"
+                )
+                event.current_buffer.validate_and_handle()
+
+        @kb.add("escape", "up")
+        def _alt_up(event):
+            channels = self.current_guild.text_channels
+            if self.current_channel in channels:
+                idx = channels.index(self.current_channel)
+                prev_channel = channels[(idx - 1) % len(channels)]
+                event.current_buffer.text = (
+                    f"/join_channel #{prev_channel.name}"
+                )
+                event.current_buffer.validate_and_handle()
+
+        @kb.add("escape", "down")
+        def _alt_down(event):
+            channels = self.current_guild.text_channels
+            if self.current_channel in channels:
+                idx = channels.index(self.current_channel)
+                next_channel = channels[(idx + 1) % len(channels)]
+                event.current_buffer.text = (
+                    f"/join_channel #{next_channel.name}"
+                )
+                event.current_buffer.validate_and_handle()
+
+        @kb.add("escape", "u")
+        def _alt_u(event):
+            for channel in self.current_guild.text_channels:
+                if self._unread_counts.get(channel.id, 0) > 0:
+                    event.current_buffer.text = (
+                        f"/join_channel #{channel.name}"
+                    )
+                    event.current_buffer.validate_and_handle()
                     return
 
-                if not msg or re.match(r'^\s*$', msg):
-                    continue
+        @kb.add("c-c")
+        @kb.add("c-d")
+        def _exit(event):
+            event.app.exit()
 
-                if msg.startswith(CMD.PREFIX):
-                    await self.handle_commands(msg)
-                elif self.current_channel:
-                    await self.send_message(msg)
-                else:
-                    self._print(
-                        "[yellow]No channel selected. "
-                        "Use /join_channel #channel-name[/]")
+        input_buffer = Buffer(
+            completer=self._completer,
+            multiline=False,
+            accept_handler=self._on_input_accept,
+            complete_while_typing=True,
+        )
 
-            self._in_chat_mode = False
+        chat_window = Window(
+            content=FormattedTextControl(self._get_chat_text),
+            wrap_lines=True,
+            always_hide_cursor=True,
+        )
+        separator_line = Window(height=1, char='─', style='dim')
+        input_window = Window(
+            content=BufferControl(
+                buffer=input_buffer,
+                input_processors=[BeforeInput(self._get_prompt_text)],
+            ),
+            height=1,
+        )
+
+        chat_panel = HSplit([chat_window, separator_line, input_window])
+
+        sidebar_separator = Window(width=1, char='│', style='dim')
+        sidebar = Window(
+            content=FormattedTextControl(self._get_sidebar_text),
+            width=Dimension.exact(SIDEBAR_WIDTH),
+            style='bg:#1a1a2e',
+            always_hide_cursor=True,
+        )
+
+        body = FloatContainer(
+            content=VSplit([chat_panel, sidebar_separator, sidebar]),
+            floats=[
+                Float(
+                    xcursor=True,
+                    ycursor=True,
+                    content=CompletionsMenu(max_height=8),
+                )
+            ],
+        )
+
+        layout = Layout(body, focused_element=input_window)
+
+        self._app = Application(
+            layout=layout,
+            key_bindings=kb,
+            full_screen=True,
+        )
+
+        self._in_chat_mode = True
+        await self._app.run_async()
+
+        self._in_chat_mode = False
+        self._app = None
+        await self.client.close()
+
+    def _on_input_accept(self, buff):
+        text = buff.text
+        if not text or not text.strip():
+            return
+        asyncio.ensure_future(self._process_input(text))
+
+    async def _process_input(self, msg):
+        if msg.startswith(CMD.PREFIX):
+            await self.handle_commands(msg)
+        elif self.current_channel:
+            await self.send_message(msg)
+        else:
+            self._print(
+                "[yellow]No channel selected. "
+                "Use /join_channel #channel-name[/]"
+            )
 
     async def send_message(self, msg):
         # convert #channel-name to <#channel_id>
-        channel_names = re.findall(r'#(\S+)', msg)
+        channel_names = re.findall(r"#(\S+)", msg)
         for msg_c in channel_names:
             for ch in self.current_guild.channels:
                 if msg_c == ch.name:
-                    msg = msg.replace(
-                        '#' + msg_c, '<#%s>' % str(ch.id))
+                    msg = msg.replace("#" + msg_c, "<#%s>" % str(ch.id))
 
         # convert @name to <@id>
         try:
-            names = [n.strip()
-                     for n in re.findall(r'@([^@]{2,32})', msg)]
-            for m in self.current_guild.members:
-                if m.display_name in names:
-                    msg = msg.replace(
-                        '@' + m.display_name,
-                        '<@' + str(m.id) + '>')
+            members = sorted(self.current_guild.members,
+                             key=lambda m: len(m.display_name), reverse=True)
+            for m in members:
+                mention = "@" + m.display_name
+                if mention in msg:
+                    msg = msg.replace(mention, "<@" + str(m.id) + ">")
             await self.current_channel.send(msg)
         except errors.Forbidden:
             self._print(
                 "[bold red]You do not have permission to send "
-                "messages in this channel.[/]")
+                "messages in this channel.[/]"
+            )
 
     async def handle_commands(self, msg):
         if CMD.HELP.match(msg):
@@ -276,6 +407,20 @@ class CLI(Observer):
                 table.add_row(cmd)
             self._print(table)
 
+            shortcuts = Table(
+                title="Keyboard Shortcuts",
+                box=box.SIMPLE,
+                border_style="cyan",
+                header_style="bold cyan",
+            )
+            shortcuts.add_column("Key", style="bold yellow")
+            shortcuts.add_column("Action", style="white")
+            shortcuts.add_row("Alt+Left", "Switch to previous channel")
+            shortcuts.add_row("Alt+Up", "Previous channel in list")
+            shortcuts.add_row("Alt+Down", "Next channel in list")
+            shortcuts.add_row("Alt+U", "Jump to next unread channel")
+            self._print(shortcuts)
+
         elif CMD.LIST_SERVERS.match(msg):
             self.display_guilds()
 
@@ -284,26 +429,31 @@ class CLI(Observer):
                 guild_n = int(CMD.JOIN_SERVER.match(msg).group(1))
                 self.current_guild = self.client.guilds[guild_n]
                 self._print(
-                    f"[bold green]Switched to[/] "
-                    f"[bold]{self.current_guild.name}[/]")
+                    f"[bold green]Switched to[/] " f"[bold]{self.current_guild.name}[/]"
+                )
                 self.display_channels()
                 self.current_channel = None
 
                 # update completer for new guild
                 if self._completer:
                     self._completer.guild = self.current_guild
-                    self._completer.channels = (
-                        self.current_guild.text_channels)
+                    self._completer.channels = self.current_guild.text_channels
                     self._completer.guild_emojis = [
-                        str(e) for e in self.current_guild.emojis]
+                        str(e) for e in self.current_guild.emojis
+                    ]
+
+                await self._fetch_discord_commands()
+                if self._completer:
+                    self._completer.discord_commands = self._discord_commands
 
                 self._print(
-                    "[dim]Select a channel with "
-                    "/join_channel #channel-name[/]")
+                    "[dim]Select a channel with " "/join_channel #channel-name[/]"
+                )
             except (ValueError, IndexError):
                 self._print(
                     "[bold red]Invalid server index.[/] "
-                    "Use /list_servers to see available servers.")
+                    "Use /list_servers to see available servers."
+                )
 
         elif CMD.LIST_CHANNELS.match(msg):
             self.display_channels()
@@ -315,23 +465,26 @@ class CLI(Observer):
             found = False
             for channel in text_channels:
                 if selected_channel == channel.name:
+                    self.previous_channel = self.current_channel
                     self.current_channel = channel
                     found = True
                     break
 
             if found:
+                self._chat_lines = []
                 self._unread_counts[self.current_channel.id] = 0
                 self._print()
-                self._print(Rule(
-                    f"[bold]#{self.current_channel.name}[/] in "
-                    f"[cyan]{self.current_guild.name}[/]",
-                    style="green",
-                ))
-                self._print()
-                self.client.emit('open_channel', self.current_channel)
-            else:
                 self._print(
-                    f"[bold red]#{selected_channel} does not exist.[/]")
+                    Rule(
+                        f"[bold]#{self.current_channel.name}[/] in "
+                        f"[cyan]{self.current_guild.name}[/]",
+                        style="green",
+                    )
+                )
+                self._print()
+                self.client.emit("open_channel", self.current_channel)
+            else:
+                self._print(f"[bold red]#{selected_channel} does not exist.[/]")
 
         elif CMD.SHOW_PINS.match(msg):
             pins = await self.current_channel.pins()
@@ -344,8 +497,9 @@ class CLI(Observer):
 
         else:
             self._print(
-                f'[bold red]Unknown command:[/] {msg}\n'
-                f'[dim]Use /help for available commands.[/]')
+                f"[bold red]Unknown command:[/] {msg}\n"
+                f"[dim]Use /help for available commands.[/]"
+            )
 
     def __format_timestamp(self, dt):
         if dt:
@@ -353,9 +507,11 @@ class CLI(Observer):
         return ""
 
     def __print_message(self, msg):
-        color = (msg.author.color
-                 if msg.author.color != Color.default()
-                 else Color.from_rgb(200, 200, 200))
+        color = (
+            msg.author.color
+            if msg.author.color != Color.default()
+            else Color.from_rgb(200, 200, 200)
+        )
         hex_color = str(color)
 
         timestamp = self.__format_timestamp(msg.created_at)
@@ -363,7 +519,7 @@ class CLI(Observer):
         content = msg.clean_content
 
         # split on code blocks to handle them separately
-        parts = re.split(r'(```[\S\s]*?```)', content)
+        parts = re.split(r"(```[\S\s]*?```)", content)
 
         text = Text()
         text.append(f" {timestamp} ", style="dim")
@@ -372,7 +528,7 @@ class CLI(Observer):
 
         has_code_block = False
         for part in parts:
-            if part.startswith('```') and part.endswith('```'):
+            if part.startswith("```") and part.endswith("```"):
                 has_code_block = True
                 # print any text accumulated so far
                 if text.plain.strip():
@@ -380,20 +536,20 @@ class CLI(Observer):
                     text = Text()
 
                 # parse and render code block
-                code = part.strip('`')
-                lines = code.split('\n')
+                code = part.strip("`")
+                lines = code.split("\n")
                 if len(lines) > 1:
                     lang = lines[0].strip()
-                    code = '\n'.join(lines[1:])
+                    code = "\n".join(lines[1:])
                 else:
-                    lang = ''
-                    code = lines[0] if lines else ''
+                    lang = ""
+                    code = lines[0] if lines else ""
 
                 if code.strip():
                     try:
                         syntax = Syntax(
-                            code, lang or "text",
-                            theme="monokai", padding=(0, 1))
+                            code, lang or "text", theme="monokai", padding=(0, 1)
+                        )
                         self._print(syntax)
                     except Exception:
                         self._print(f"[dim]{code}[/]")
@@ -440,66 +596,69 @@ class CLI(Observer):
 
         if parts:
             border_color = str(embed.colour) if embed.colour else "blue"
-            self._print(Panel(
-                "\n".join(parts),
-                border_style=border_color,
-                padding=(0, 1),
-            ))
+            self._print(
+                Panel(
+                    "\n".join(parts),
+                    border_style=border_color,
+                    padding=(0, 1),
+                )
+            )
 
     def update(self, action, data=None):
-        if action == 'login_successful':
+        if action == "login_successful":
             if not self.logged_in:
                 self.logged_in = True
                 asyncio.ensure_future(self._main_ui())
 
-        elif action == 'message_edit':
-            if (self.current_channel
-                    and data.channel.id == self.current_channel.id):
-                self.client.emit('open_channel', self.current_channel)
+        elif action == "message_edit":
+            if self.current_channel and data.channel.id == self.current_channel.id:
+                self.client.emit("open_channel", self.current_channel)
 
-        elif action == 'pinged':
-            if (self.current_channel
-                    and self.current_channel.id != data.channel.id):
-                self._print(Panel(
-                    f"[bold]@{data.author.display_name}[/] mentioned "
-                    f"you in [cyan]{data.guild.name}[/] | "
-                    f"[green]#{data.channel.name}[/]",
-                    border_style="dark_orange",
-                    padding=(0, 1),
-                ))
+        elif action == "pinged":
+            if self.current_channel and self.current_channel.id != data.channel.id:
+                self._print(
+                    Panel(
+                        f"[bold]@{data.author.display_name}[/] mentioned "
+                        f"you in [cyan]{data.guild.name}[/] | "
+                        f"[green]#{data.channel.name}[/]",
+                        border_style="dark_orange",
+                        padding=(0, 1),
+                    )
+                )
 
-        elif action == 'message':
+        elif action == "message":
             msg = data
-            if (self.current_channel
-                    and self.current_channel.id == msg.channel.id
-                    and self.channel_open):
+            if (
+                self.current_channel
+                and self.current_channel.id == msg.channel.id
+                and self.channel_open
+            ):
                 self.__print_message(msg)
-            elif (self.current_guild
-                    and msg.guild
-                    and msg.guild.id == self.current_guild.id
-                    and msg.author != self.client.user
-                    and self.channel_open):
+            elif (
+                self.current_guild
+                and msg.guild
+                and msg.guild.id == self.current_guild.id
+                and msg.author != self.client.user
+                and self.channel_open
+            ):
                 cid = msg.channel.id
                 prev = self._unread_counts.get(cid, 0)
                 self._unread_counts[cid] = prev + 1
-                if prev == 0:
-                    self._print(Rule(
-                        f"[bold yellow]#{msg.channel.name}[/] · new activity",
-                        style="dim yellow",
-                    ))
-                if self._session and self._session.app:
-                    self._session.app.invalidate()
+                if self._app:
+                    self._app.invalidate()
 
     async def _main_ui(self):
         self.console.clear()
-        self.console.print(Panel(
-            Text(BANNER, style="bold cyan", justify="center"),
-            subtitle="[dim]Discord in your terminal[/]",
-            border_style="cyan",
-        ))
         self.console.print(
-            f"[bold green]Logged in as[/] "
-            f"[bold]{self.client.user.name}[/]")
+            Panel(
+                Align.center(Text(BANNER, style="bold cyan")),
+                subtitle="[dim]Discord in your terminal[/]",
+                border_style="cyan",
+            )
+        )
+        self.console.print(
+            f"[bold green]Logged in as[/] " f"[bold]{self.client.user.name}[/]"
+        )
         self.console.print()
 
         self.display_guilds()
