@@ -30,6 +30,8 @@ class DiscordClient(discord.Client, Subject):
 
         self.attach(cli)
         self.session_token = None
+        self._open_channel_task = None
+        self._current_open_channel = None
 
         if not bot:
             self._patch_http_auth()
@@ -90,9 +92,17 @@ class DiscordClient(discord.Client, Subject):
 
     async def on_open_channel(self, channel):
         messages = [msg async for msg in channel.history(limit=10)]
+        if self._current_open_channel != channel:
+            return
         for message in reversed(messages):
             self.notify('message', message)
 
     def emit(self, event, *args):
         fn = getattr(self, 'on_' + event)
-        asyncio.ensure_future(fn(*args))
+        if event == 'open_channel':
+            if self._open_channel_task and not self._open_channel_task.done():
+                self._open_channel_task.cancel()
+            self._current_open_channel = args[0]
+            self._open_channel_task = asyncio.ensure_future(fn(*args))
+        else:
+            asyncio.ensure_future(fn(*args))

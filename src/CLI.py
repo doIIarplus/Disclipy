@@ -160,7 +160,7 @@ class CLI(Observer):
         self.client = DiscordClient(self, bot=is_bot)
 
         self.console.print("[dim]Connecting to Discord...[/]")
-        self.client.run(token)
+        self.client.run(token, log_handler=None)
 
     def display_guilds(self):
         table = Table(
