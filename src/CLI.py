@@ -641,6 +641,7 @@ class CLI(Observer):
 
         elif action == "message_edit":
             if self.current_channel and data.channel.id == self.current_channel.id:
+                self._chat_lines = []
                 self.client.emit("open_channel", self.current_channel)
 
         elif action == "pinged":
